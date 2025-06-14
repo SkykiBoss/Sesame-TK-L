@@ -114,6 +114,8 @@ public class AntFarm extends ModelTask {
         bizKeyList.add("SLEEP");// 让小鸡去睡觉
         // taskID填入此处
         // 新增内容
+        bizKeyList.add("XJLYKBX1_sl90");// 去小鸡乐园开2次宝箱，完成可得90g饲料
+        bizKeyList.add("CAINIAOGUOGUO2023V2");// 去菜鸟做公益，完成可得90g饲料
         bizKeyList.add("VIDEO_TASK");// 看庄园小视频，浏览15s可得90g饲料
         bizKeyList.add("25WFYX_duiudipeng");// 玩对对碰乐园完成20次消除，完成得1个乐园宝箱和限时180g饲料
         bizKeyList.add("mangheshipai");// 家庭小盲盒实拍照片来啦，通过家庭活动获得小盲盒，还可获得90g饲料
