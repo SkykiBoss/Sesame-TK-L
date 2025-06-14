@@ -1,11 +1,6 @@
-![Sesame-TK](https://socialify.git.ci/Fansirsqi/Sesame-TK/image?description=1&font=Source%20Code%20Pro&forks=1&issues=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2FFansirsqi%2FSesame-TK%2Frefs%2Fheads%2Fmain%2Fapp%2Fsrc%2Fmain%2Fassets%2Fweb%2FSesame-TK-logo.svg&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto)
+![Sesame-TK](https://socialify.git.ci/ALLG999/Sesame-TK/image?description=1&font=Source%20Code%20Pro&forks=1&issues=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2ALLG999%2FSesame-TK%2Frefs%2Fheads%2Fmain%2Fapp%2Fsrc%2Fmain%2Fassets%2Fweb%2FSesame-TK-logo.svg&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto)
 
-[![License](https://img.shields.io/github/license/Fansirsqi/Sesame-TK?labelColor=fff&label=License&logo=gnuprivacyguard)](https://raw.githubusercontent.com/Fansirsqi/Sesame-TK/refs/heads/main/LICENSE)  
-[![Latest Release](https://img.shields.io/github/release/Fansirsqi/Sesame-TK?labelColor=fff&label=Releases&logo=gitlfs)](../../releases)  
-[![All Releases Download](https://img.shields.io/github/downloads/Fansirsqi/Sesame-TK/total?labelColor=fff&label=Downloads&logo=codefresh)](../../releases)  
-[![Telegram-Channel](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Channel&labelColor=fff&link=https%3A%2F%2Ft.me%2FSesame_TK_Channel)](https://t.me/Sesame_TK_Channel)  
-[![Telegram-Group](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Group&labelColor=fff&link=https%3A%2F%2Ft.me%2Ffansirsqi_xposed_sesame)](https://t.me/fansirsqi_xposed_sesame)  
-[![云湖](https://img.shields.io/badge/%E4%BA%91%E6%B9%96-%E4%BA%A4%E6%B5%81%E7%BE%A4-nul?logo=icloud&logoColor=%236F4FD0&label=%E4%BA%91%E6%B9%96&labelColor=fff&color=%236F4FD0&link=https%3A%2F%2Fyhfx.jwznb.com%2Fshare%3Fkey%3DpEGmZ1gsdoBI%26ts%3D1734597564%20)](https://yhfx.jwznb.com/share?key=pEGmZ1gsdoBI&ts=1734597564)
+[![License](https://img.shields.io/github/license/Fansirsqi/Sesame-TK?labelColor=fff&label=License&logo=gnuprivacyguard)](https://raw.githubusercontent.com/Fansirsqi/Sesame-TK/refs/heads/main/LICENSE)  [![Latest Release](https://img.shields.io/github/release/Fansirsqi/Sesame-TK?labelColor=fff&label=Releases&logo=gitlfs)](../../releases)  [![All Releases Download](https://img.shields.io/github/downloads/Fansirsqi/Sesame-TK/total?labelColor=fff&label=Downloads&logo=codefresh)](../../releases)  [![Telegram-Channel](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Channel&labelColor=fff&link=https%3A%2F%2Ft.me%2FSesame_TK_Channel)](https://t.me/Sesame_TK_Channel)  [![Telegram-Group](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Group&labelColor=fff&link=https%3A%2F%2Ft.me%2Ffansirsqi_xposed_sesame)](https://t.me/fansirsqi_xposed_sesame)  [![云湖](https://img.shields.io/badge/%E4%BA%91%E6%B9%96-%E4%BA%A4%E6%B5%81%E7%BE%A4-nul?logo=icloud&logoColor=%236F4FD0&label=%E4%BA%91%E6%B9%96&labelColor=fff&color=%236F4FD0&link=https%3A%2F%2Fyhfx.jwznb.com%2Fshare%3Fkey%3DpEGmZ1gsdoBI%26ts%3D1734597564%20)](https://yhfx.jwznb.com/share?key=pEGmZ1gsdoBI&ts=1734597564)
 
 > 👉懒真人版本: [Sesame](https://github.com/LazyImmortal/Sesame)
 
@@ -14,34 +9,8 @@
 ### 📢欢迎大家提出宝贵意见，共同完善此项目
 
 > ### ~~墙内不再更新~~ 有缘再见~
->
-> [~~戳这里~~](https://fansirs.lanzoue.com/b011kv6pwd) ~~密码:`9527`~~
 
-> ## 2025-06-11更新咸鱼耻辱名单
-
-
-### 以下内容对项目的发展造成了一定的影响，经研究决定 清空所有workflow ，以及项目所有资产，欢迎pr你在咸鱼看到的卖家，我会在这里更新
-
-## 耻辱列表
-
-**访问方法**
-`https://www.goofish.com/personal?userId=xxx`  
-将下面的userid替换上面的xxx
-如 `星空卡券`： https://www.goofish.com/personal?userId=590917148
-
-什么时候这些主页下架了模块，我们再发布新版本😁，或者等咸鱼大佬更新，~~我们再抄~~
-
-|    咸鱼昵称    |    userid     |    更新日期    |                                                                                                        证据 |
-| :--------: | :-----------: | :--------: | --------------------------------------------------------------------------------------------------------: |
-|    星空卡券    |   590917148   | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.4jocuogftd.webp) |
-|   好笑的士兵    | 2208083536994 | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.6m45irtzyh.webp) |
-| 不及时确认收货不交易 | 2212868979480 | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.7zqomtakoy.webp) |
-|   宝宝微多猫    |  2434615193   | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.4cl4zam5vy.webp) |
-|    应用大全    | 2215835360792 | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.2324ft3jo1.webp) |
-|   勤劳的小蜜蜂   | 2219398988369 | 2025-06-13 |  ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250613/image.8adiif2fz5.png) |
-|    star    |  3320174826   | 2025-06-13 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250613/image.8dx4g4zy20.webp) |
-
-。。。
+> ### 非官方编译，别问安装的时候为啥签名冲突，因为我不会！
 
 🤖 代码的大部分内容是通过 `GPT-4o` 模型的辅助来完成的。
 
@@ -51,7 +20,7 @@
 
 ❓ 访问异常请手动开启 平衡网络延迟选项，设置适当的延迟时间以及查询时间
 
-☀️ 对了，我自己用的支付宝版本是`10.5.88.8000（忘了）`~`10.6.66.8000(1916)`~`10.7.26.8100(2560)`
+☀️ 对了，我自己用的支付宝版本是`10.6.88.9100`
 
 💊 如果你想自己编译，请fork本项目
 
@@ -59,6 +28,7 @@
 
 然后在仓库设置相关签名文件信息，使用GitHub Actions编译，下载编译好的APK文件，安装到手机上即可  
 签名的生成以及转码请自行🔍解决 很简单滴~，你绝B可以
+酷安搜懒真人，他发过教程！
 
 | 仓库变量名                      | 变量值                          |  
 |----------------------------|------------------------------|  
@@ -154,9 +124,6 @@
 所有图片由 ༒激༙྇流༙྇泉༙྇༒ 授权使用
 
 ## 协议说明
-
-在 **北京时间2024年7月15日之前** 提交的所有代码 ，遵循 Apache-2.0 协议
-
 自 **北京时间2024年7月15日开始** 提交的所有代码 ，遵循 GPLv3 协议，并禁止用于任何商业用途、禁止二次修改后闭源发布
 
 ## 鸣谢
