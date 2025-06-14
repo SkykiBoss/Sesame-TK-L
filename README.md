@@ -30,7 +30,7 @@
 签名的生成以及转码请自行🔍解决 很简单滴~，你绝B可以
 酷安搜懒真人，他发过教程！
 
-| 仓库变量名                      | 变量值                          |  
+| 签名变量名                      | 变量值                          |  
 |----------------------------|------------------------------|  
 | `ANDROID_SIGNING_KEY`      | `keystore.jks`文件的base64编码字符串 |  
 | `ANDROID_KEY_ALIAS`        | `keystore.jks`文件别名           |  
@@ -38,9 +38,23 @@
 | `ANDROID_KEY_PASSWORD`     | `keystore.jks`文件密码           |  
 
 设置好这些后，去仓库新建一个release，随便新建一个tag，然后点击`Publish release`，GitHub Actions会自动编译并发布APK文件到release中，下载安装即可
+<details> <summary>TG BOT配置教程</summary>   
+<h3>创建 Telegram Bot</h3>  
+1.私聊 @BotFather
+<br>2.发送 /newbot 创建新 bot → 获取 TG_BOT_TOKEN
+<br>3.获取 Chat ID：
+<br>4.将 bot 添加到群组/频道
+<br>访问:https://api.telegram.org/bot<TG_BOT_TOKEN>/getUpdates
+<br>例如:https://api.telegram.org/bot123456:abcdefg/getUpdates
+<br>找到"sender_chat": {"id": -这是一串负数, 或者 "chat": {"id": -这是一串负数,
+<br>查找响应中的 "id" 字段 → 即 TG_CHAT_ID
 
+| TG变量名                      | 变量值                          |  
+|----------------------------|------------------------------|  
+| `TG_CHAT_ID`      | `-100123456789`群ID |  
+| `TG_BOT_TOKEN`        | `k123456：abcdefg`密钥           |  
 
-
+</details>  
 <details>  
 <summary>Preview Images</summary>  
 
@@ -114,9 +128,7 @@
 
 ## 授权说明
 
-本项目fork自  
-基于 [constanline版XQuickEnergy](https://github.com/constanline/XQuickEnergy)  
-与 [pansong291版XQuickEnergy](https://github.com/pansong291/XQuickEnergy)  
+本项目fork自  基于 [constanline版XQuickEnergy](https://github.com/constanline/XQuickEnergy)  与 [pansong291版XQuickEnergy](https://github.com/pansong291/XQuickEnergy)  
 开发的项目[Sesame-TK](https://github.com/TKaxv-7S/Sesame-TK)  
 并且在其基础上进行了少量的功能改进与优化。得益于GPT4-o模型的强大能力使得本项目能有这么多提交  
 但是不确定是否是有效修改，请自行斟酌考虑使用。
