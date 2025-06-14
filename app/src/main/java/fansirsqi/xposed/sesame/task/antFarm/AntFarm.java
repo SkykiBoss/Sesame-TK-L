@@ -114,6 +114,8 @@ public class AntFarm extends ModelTask {
         bizKeyList.add("SLEEP");// 让小鸡去睡觉
         // taskID填入此处
         // 新增内容
+        bizKeyList.add("XJLY_meishiqiyuji30");// 去小鸡乐园开2次宝箱，完成可得90g饲料
+        bizKeyList.add("25WFYX_shiguangzahuodian");// 去小鸡乐园开2次宝箱，完成可得90g饲料
         bizKeyList.add("XJLYKBX1_sl90");// 去小鸡乐园开2次宝箱，完成可得90g饲料
         bizKeyList.add("CAINIAOGUOGUO2023V2");// 去菜鸟做公益，完成可得90g饲料
         bizKeyList.add("VIDEO_TASK");// 看庄园小视频，浏览15s可得90g饲料
