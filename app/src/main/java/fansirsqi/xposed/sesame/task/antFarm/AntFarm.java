@@ -87,7 +87,7 @@ public class AntFarm extends ModelTask {
 
     static {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
+     
         bizKeyList = new ArrayList<>();
         bizKeyList.add("ADD_GONGGE_NEW");
         bizKeyList.add("USER_STARVE_PUSH");
@@ -112,6 +112,23 @@ public class AntFarm extends ModelTask {
         bizKeyList.add("TAOBAO_renshenggyg");// 去淘宝人生逛一逛
         bizKeyList.add("TOUTIAO_daoduan");// 去今日头条极速版逛一逛
         bizKeyList.add("SLEEP");// 让小鸡去睡觉
+        // taskID填入此处
+        // 新增内容
+        bizKeyList.add("VIDEO_TASK");// 看庄园小视频，浏览15s可得90g饲料
+        bizKeyList.add("25WFYX_duiudipeng");// 玩对对碰乐园完成20次消除，完成得1个乐园宝箱和限时180g饲料
+        bizKeyList.add("mangheshipai");// 家庭小盲盒实拍照片来啦，通过家庭活动获得小盲盒，还可获得90g饲料
+        bizKeyList.add("25WFYX_baoweixiangrikui");// 玩向日葵通过1关主线新关卡，完成可得1个小鸡乐园宝箱和90g饲料
+        bizKeyList.add("2025618dacu");// 去淘金币618赢10亿，完成浏览可得90g饲料
+        bizKeyList.add("BBNC_gyg");// 去芭芭农场逛一逛，完成可得90g饲料
+        bizKeyList.add("COOK");// 小鸡厨房，每天做美食可得90g饲料
+        bizKeyList.add("ANTMEMBER_RICHANGQIANDAO");// 去支付宝会员签到，完成可得90g饲料
+        bizKeyList.add("tab3_gyg");// 逛一逛热门短视频，完成看视频进度最高可得240g饲料
+        bizKeyList.add("baiduditu");// 去百度地图逛一逛，完成可得90g饲料
+        bizKeyList.add("OFFLINE_PAY");// 到店付款，完成可得180g饲料
+        bizKeyList.add("ONLINE_PAY");// 线上支付，完成可得180g饲料
+        bizKeyList.add("SHANGYEHUA_90_1");// 去杂货铺逛一逛，浏览15s可得90g饲料
+        bizKeyList.add("chouchoule_xiaritianqi");// 抽抽乐每日抽1次可得90g饲料
+        bizKeyList.add("HEART_DONATION_ADVANCED_FOOD_V2");// 每天单笔捐赠1元可得爱心美食
     }
 
     @Override
