@@ -56,6 +56,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 public class AntFarm extends ModelTask {
     private static final String TAG = AntFarm.class.getSimpleName();
     private String ownerFarmId;
@@ -85,11 +89,6 @@ public class AntFarm extends ModelTask {
     private static final List<String> bizKeyList;
 
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 public class YourClassName {
     private static final ObjectMapper objectMapper = new ObjectMapper();
