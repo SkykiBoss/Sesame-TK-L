@@ -136,7 +136,6 @@ public class AntFarm extends ModelTask {
         bizKeyList.add("ONLINE_PAY");// 线上支付，完成可得180g饲料
         bizKeyList.add("30001229221356342088142133303848");// 一起拿小鸡饲料，每天可给5位好友送饲料，7天内好友完成领取，自己可获1包饲料（不扣自己的饲料，且奖励不会过期）
         bizKeyList.add("30001935487934202088142133303848");// 庄园小课堂，每天答题最高可得180g饲料
-        bizKeyList.add("SHANGYEHUA_90_1");// 去杂货铺逛一逛，浏览15s可得90g饲料
         bizKeyList.add("chouchoule_xiaritianqi");// 抽抽乐每日抽1次可得90g饲料
         bizKeyList.add("HEART_DONATION_ADVANCED_FOOD_V2");// 每天单笔捐赠1元可得爱心美食
     }
