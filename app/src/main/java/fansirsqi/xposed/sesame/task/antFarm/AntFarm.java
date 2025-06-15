@@ -53,12 +53,14 @@ import lombok.ToString;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AntFarm extends ModelTask {
     private static final String TAG = AntFarm.class.getSimpleName();
@@ -86,21 +88,19 @@ public class AntFarm extends ModelTask {
     private double finalScore = 0d;
     private String familyGroupId;
     private FarmTool[] farmTools;
-    private static final List<String> bizKeyList;
 
-
-
-public class YourClassName {
+public class AntFarm {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final List<String> bizKeyList = new ArrayList<>();
     
-    // 新增：通配模式缓存（线程安全）
+    // 通配模式缓存（线程安全）
     private static final Map<String, Pattern> patternCache = Collections.synchronizedMap(new HashMap<>());
     
     static {
+        // 配置Jackson
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
      
-        // 原始bizKeyList初始化（保持您的注释格式）
+        // 初始化bizKeyList - 保持原有注释格式
         bizKeyList.add("ADD_GONGGE_NEW");
         bizKeyList.add("USER_STARVE_PUSH");
         bizKeyList.add("YEB_PURCHASE");
@@ -124,6 +124,7 @@ public class YourClassName {
         bizKeyList.add("TAOBAO_renshenggyg");// 去淘宝人生逛一逛
         bizKeyList.add("TOUTIAO_daoduan");// 去今日头条极速版逛一逛
         bizKeyList.add("SLEEP");// 让小鸡去睡觉
+        
         // 新增内容
         bizKeyList.add("25WFYX_xiaojiliaoli_v2");// 去小鸡乐园开2次宝箱，完成可得90g饲料
         bizKeyList.add("25WFYX_xiaojinuoche");// 去小鸡乐园开2次宝箱，完成可得90g饲料
@@ -150,13 +151,13 @@ public class YourClassName {
         bizKeyList.add("chouchoule_xiaritianqi");// 抽抽乐每日抽1次可得90g饲料
         bizKeyList.add("HEART_DONATION_ADVANCED_FOOD_V2");// 每天单笔捐赠1元可得爱心美食
         
-        // 初始化常用通配模式（可选）
+        // 初始化常用通配模式
         addPattern("25WFYX_*");
         addPattern("XJLY*");
         addPattern("*_gyg");
     }
     
-    // ============== 新增通配识别方法 ============== //
+    // ================= 通配识别方法 ================= //
     
     /**
      * 添加通配模式
@@ -235,8 +236,12 @@ public class YourClassName {
         }
         return result;
     }
+    
+    // ================= 其他业务方法 ================= //
+    // ... (保持您原有的业务方法不变) ...
 }
 
+    
     @Override
     public String getName() {
         return "庄园";
