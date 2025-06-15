@@ -114,6 +114,7 @@ public class AntFarm extends ModelTask {
         bizKeyList.add("SLEEP");// 让小鸡去睡觉
         // taskID填入此处
         // 新增内容
+        bizKeyList.add("25WFYX_xiaojiliaoli_v2");// 去小鸡乐园开2次宝箱，完成可得90g饲料
         bizKeyList.add("25WFYX_xiaojinuoche");// 去小鸡乐园开2次宝箱，完成可得90g饲料
         bizKeyList.add("HUABEI2023");// 去花呗花花卡逛一逛，完成可得90g饲料
         bizKeyList.add("XJLY_meishiqiyuji30");// 去小鸡乐园开2次宝箱，完成可得90g饲料
@@ -125,7 +126,7 @@ public class AntFarm extends ModelTask {
         bizKeyList.add("mangheshipai");// 家庭小盲盒实拍照片来啦，通过家庭活动获得小盲盒，还可获得90g饲料
         bizKeyList.add("25WFYX_baoweixiangrikui");// 玩向日葵通过1关主线新关卡，完成可得1个小鸡乐园宝箱和90g饲料
         bizKeyList.add("2025618dacu");// 去淘金币618赢10亿，完成浏览可得90g饲料
-        bizKeyList.add("HEART_DONATE");// 爱心捐赠（每天2次），捐任意金额可得180g饲料（这个不一定有效！）
+        //bizKeyList.add("HEART_DONATE");// 爱心捐赠（每天2次），捐任意金额可得180g饲料（为保证项目正常运行，禁止使用此项！）
         bizKeyList.add("BBNC_gyg");// 去芭芭农场逛一逛，完成可得90g饲料
         bizKeyList.add("COOK");// 小鸡厨房，每天做美食可得90g饲料
         bizKeyList.add("ANTMEMBER_RICHANGQIANDAO");// 去支付宝会员签到，完成可得90g饲料
