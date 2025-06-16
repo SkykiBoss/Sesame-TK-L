@@ -72,6 +72,12 @@ public class AntFarm extends ModelTask {
     /**
      * 小鸡饲料g
      */
+    private Animal[] animals;
+    private Animal ownerAnimal = new Animal();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    /**
+     * 小鸡饲料g
+     */
     private int foodStock;
     private int foodStockLimit;
     private String rewardProductNum;
@@ -88,19 +94,13 @@ public class AntFarm extends ModelTask {
     private double finalScore = 0d;
     private String familyGroupId;
     private FarmTool[] farmTools;
+    private static final List<String> bizKeyList;
 
-public class AntFarm {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final List<String> bizKeyList = new ArrayList<>();
-    
-    // 通配模式缓存（线程安全）
-    private static final Map<String, Pattern> patternCache = Collections.synchronizedMap(new HashMap<>());
-    
-    static {
-        // 配置Jackson
+
+static {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
      
-        // 初始化bizKeyList - 保持原有注释格式
+        bizKeyList = new ArrayList<>();
         bizKeyList.add("ADD_GONGGE_NEW");
         bizKeyList.add("USER_STARVE_PUSH");
         bizKeyList.add("YEB_PURCHASE");
@@ -124,7 +124,7 @@ public class AntFarm {
         bizKeyList.add("TAOBAO_renshenggyg");// 去淘宝人生逛一逛
         bizKeyList.add("TOUTIAO_daoduan");// 去今日头条极速版逛一逛
         bizKeyList.add("SLEEP");// 让小鸡去睡觉
-        
+        // taskID填入此处
         // 新增内容
         bizKeyList.add("25WFYX_xiaojiliaoli_v2");// 去小鸡乐园开2次宝箱，完成可得90g饲料
         bizKeyList.add("25WFYX_xiaojinuoche");// 去小鸡乐园开2次宝箱，完成可得90g饲料
@@ -150,97 +150,7 @@ public class AntFarm {
         bizKeyList.add("30001935487934202088142133303848");// 庄园小课堂，每天答题最高可得180g饲料
         bizKeyList.add("chouchoule_xiaritianqi");// 抽抽乐每日抽1次可得90g饲料
         bizKeyList.add("HEART_DONATION_ADVANCED_FOOD_V2");// 每天单笔捐赠1元可得爱心美食
-        
-        // 初始化常用通配模式
-        addPattern("25WFYX_*");
-        addPattern("XJLY*");
-        addPattern("*_gyg");
     }
-    
-    // ================= 通配识别方法 ================= //
-    
-    /**
-     * 添加通配模式
-     * @param pattern 通配模式，如 "25WFYX_*"
-     */
-    public static void addPattern(String pattern) {
-        // 转义正则特殊字符（除*和?外）
-        String regex = pattern
-            .replace("\\", "\\\\")
-            .replace(".", "\\.")
-            .replace("+", "\\+")
-            .replace("$", "\\$")
-            .replace("^", "\\^")
-            .replace("[", "\\[")
-            .replace("]", "\\]")
-            .replace("(", "\\(")
-            .replace(")", "\\)")
-            .replace("{", "\\{")
-            .replace("}", "\\}")
-            .replace("|", "\\|")
-            // 处理通配符
-            .replace("*", ".*")
-            .replace("?", ".");
-        
-        patternCache.put(pattern, Pattern.compile(regex));
-    }
-    
-    /**
-     * 匹配单个通配模式
-     * @param pattern 通配模式
-     * @return 匹配的bizKey列表
-     */
-    public static List<String> matchKeys(String pattern) {
-        if (!patternCache.containsKey(pattern)) {
-            addPattern(pattern);
-        }
-        Pattern compiled = patternCache.get(pattern);
-        List<String> result = new ArrayList<>();
-        for (String key : bizKeyList) {
-            if (compiled.matcher(key).matches()) {
-                result.add(key);
-            }
-        }
-        return result;
-    }
-    
-    /**
-     * 批量匹配多个通配模式
-     * @param patterns 通配模式列表
-     * @return 匹配的bizKey列表（去重）
-     */
-    public static List<String> matchKeys(List<String> patterns) {
-        Set<String> result = new LinkedHashSet<>(); // 保持插入顺序
-        for (String pattern : patterns) {
-            result.addAll(matchKeys(pattern));
-        }
-        return new ArrayList<>(result);
-    }
-    
-    /**
-     * 直接使用通配符匹配（无需预先addPattern）
-     * @param wildcard 通配字符串
-     * @return 匹配的bizKey列表
-     */
-    public static List<String> matchWildcard(String wildcard) {
-        Pattern pattern = Pattern.compile(wildcard
-            .replace(".", "\\.")
-            .replace("*", ".*")
-            .replace("?", "."));
-        
-        List<String> result = new ArrayList<>();
-        for (String key : bizKeyList) {
-            if (pattern.matcher(key).matches()) {
-                result.add(key);
-            }
-        }
-        return result;
-    }
-    
-    // ================= 其他业务方法 ================= //
-    // ... (保持您原有的业务方法不变) ...
-}
-
     
     @Override
     public String getName() {
