@@ -11,7 +11,6 @@ on:
 
 env:
   SHORT_SHA: ${{ github.sha }}  # 添加SHORT_SHA环境变量
-  TZ: Asia/Shanghai  # 设置时区环境变量
 
 jobs:
   build:
@@ -183,6 +182,14 @@ jobs:
           token: ${{ secrets.TG_BOT_TOKEN }}
           document: ${{ steps.extract_apks.outputs.signed_compatible }}
 
+      - name: Create Tag from Version
+        if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
+        run: |
+          VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
+          echo "Creating tag: $VERSION_TAG"
+          git tag "$VERSION_TAG"
+          git push origin "$VERSION_TAG"
+
       - name: Upload Assets to Source Release
         if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v2
@@ -207,27 +214,3 @@ jobs:
             > * **Compatible**: 适用于 Android 5.1-7.1
             
             > ~~墙内不再更新~~ 倒卖必死全家
-
-      - name: Sync Release to Target Repository
-        if: github.event_name == 'release' && github.event.action == 'published'
-        uses: softprops/action-gh-release@v2
-        with:
-          repository: Xposed-Modules-Repo/fansirsqi.xposed.sesame
-          token: ${{ secrets.TARGET_REPO_PAT }}  # 目标仓库的PAT
-          files: |
-            ${{ steps.extract_apks.outputs.signed_compatible }}
-            ${{ steps.extract_apks.outputs.signed_normal }}
-            CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-            CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-          tag_name: ${{ github.event.release.tag_name }}  # 使用相同标签
-          name: ${{ github.event.release.tag_name }}
-          draft: false
-          prerelease: ${{ contains(github.event.release.tag_name, 'beta') || contains(github.event.release.tag_name, 'rc') }}
-          body: |
-            📦 本 Release 同步自源仓库 [Sesame-TK](https://github.com/${{ github.repository }})
-            
-            ✨ **更新内容**:
-            ${{ github.event.release.body || '无更新说明' }}
-            
-            ---
-            ℹ️ 自动同步于 $(date -u +"%Y-%m-%dT%H:%M:%SZ")
