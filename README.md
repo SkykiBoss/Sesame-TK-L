@@ -38,16 +38,54 @@
 | `ANDROID_KEY_PASSWORD`     | `keystore.jks`文件密码           |  
 
 设置好这些后，去仓库新建一个release，随便新建一个tag，然后点击`Publish release`，GitHub Actions会自动编译并发布APK文件到release中，下载安装即可
+<details> 
+  <summary>TARGET_REPO_PAT报错</summary>   
+<h3>TARGET_REPO_PAT报错</h3>  
+步骤 1：创建个人访问令牌（PAT）
+<br>登录 GitHub 账户：确保您拥有目标仓库（Xposed-Modules-Repo/fansirsqi.xposed.sesame）的写入权限
+<br>访问 Token 生成页面：
+<br>打开 GitHub 开发者设置
+<br>或点击右上角头像 → Settings → 左侧菜单最下方 Developer settings → Personal access tokens → Tokens (classic)
+<br>生成新 Token：
+
+- 点击 **Generate new token** → 选择 **Generate new token (classic)**
+- 填写描述（如 `Sync Release to Xposed-Modules-Repo`）
+- 选择过期时间（建议选择 `No expiration`）
+- 选择权限（必须包含）：
+  ✅ `repo`（完全控制仓库）
+  ✅ `workflow`（允许操作工作流）
+https://docs.github.com/assets/cb-20363/images/help/settings/token_scopes.gif
+
+生成 Token：
+滚动到底部点击 Generate token 按钮
+立即复制 Token（离开页面后将无法再次查看！）
+步骤 2：将 PAT 添加到源仓库的 Secrets
+打开源仓库设置：
+进入您的源仓库（触发工作流的仓库）页面
+点击 Settings → Secrets and variables → Actions
+添加新 Secret：
+- 点击 **New repository secret**
+- 输入名称：`TARGET_REPO_PAT`（必须与工作流中的名称一致）
+- 在 Value 中粘贴刚才复制的 Token
+- 点击 **Add secret**
+
+| PAT变量名                      | 变量值                          |  
+|----------------------------|------------------------------|  
+| `TARGET_REPO_PAT`      | `abcdefg`Token |  
+
+</details>  
+
 <details> <summary>TG BOT配置教程</summary>   
 <h3>创建 Telegram Bot</h3>  
-1.私聊 @BotFather
-<br>2.发送 /newbot 创建新 bot → 获取 TG_BOT_TOKEN
-<br>3.获取 Chat ID：
-<br>4.将 bot 添加到群组/频道
-<br>访问:https://api.telegram.org/bot<TG_BOT_TOKEN>/getUpdates
-<br>例如:https://api.telegram.org/bot123456:abcdefg/getUpdates
-<br>找到"sender_chat": {"id": -这是一串负数, 或者 "chat": {"id": -这是一串负数,
-<br>查找响应中的 "id" 字段 → 即 TG_CHAT_ID
+
+- 私聊 @BotFather
+- 发送 /newbot 创建新 bot → 获取 TG_BOT_TOKEN
+- 获取 Chat ID：
+- 将 bot 添加到群组/频道
+- 访问:https://api.telegram.org/bot<TG_BOT_TOKEN>/getUpdates
+- 例如:https://api.telegram.org/bot123456:abcdefg/getUpdates
+- 找到"sender_chat": {"id": -这是一串负数, 或者 "chat": {"id": -这是一串负数,
+- 查找响应中的 "id" 字段 → 即 TG_CHAT_ID
 
 | TG变量名                      | 变量值                          |  
 |----------------------------|------------------------------|  
