@@ -26,9 +26,11 @@
 
 📕 开发者或用户请看[维基](https://github.com/Fansirsqi/Sesame-TK/wiki)
 
+<details> 
+<summary>安卓签名方法</summary>   
 然后在仓库设置相关签名文件信息，使用GitHub Actions编译，下载编译好的APK文件，安装到手机上即可  
 签名的生成以及转码请自行🔍解决 很简单滴~，你绝B可以
-酷安搜懒真人，他发过教程！
+<br>酷安搜懒真人，他发过教程！
 
 | 签名变量名                      | 变量值                          |  
 |----------------------------|------------------------------|  
@@ -38,8 +40,9 @@
 | `ANDROID_KEY_PASSWORD`     | `keystore.jks`文件密码           |  
 
 设置好这些后，去仓库新建一个release，随便新建一个tag，然后点击`Publish release`，GitHub Actions会自动编译并发布APK文件到release中，下载安装即可
+</details> 
 <details> 
-  <summary>TARGET_REPO_PAT报错</summary>   
+<summary>TARGET_REPO_PAT报错</summary>   
 <h3>TARGET_REPO_PAT报错</h3>  
 步骤 1：创建个人访问令牌（PAT）
 <br>登录 GitHub 账户：确保您拥有目标仓库（Xposed-Modules-Repo/fansirsqi.xposed.sesame）的写入权限
@@ -139,6 +142,8 @@ https://docs.github.com/assets/cb-20363/images/help/settings/token_scopes.gif
 ### 旧版本在 [XQuickEnergy](https://github.com/TKaxv-7S/XQuickEnergy)
 
 </details>  
+<details>  
+<summary>主要功能</summary>  
 
 ## 主要功能
 
@@ -188,8 +193,9 @@ https://docs.github.com/assets/cb-20363/images/help/settings/token_scopes.gif
 
 <a href="https://star-history.com/#Fansirsqi/Sesame-TK&Timeline">  
  <picture>  
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline&theme=dark" />  
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline" />  
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline" />  
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ALLG999/Sesame-TK&type=Timeline&theme=dark" />  
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ALLG999/Sesame-TK&type=Timeline" />  
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ALLG999/Sesame-TK&type=Timeline" />  
  </picture>  
 </a>
+</details>  
