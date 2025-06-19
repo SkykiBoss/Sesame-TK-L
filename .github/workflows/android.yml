@@ -9,9 +9,6 @@ on:
     types: [published]
   workflow_dispatch:
 
-env:
-  SHORT_SHA: ${{ github.sha }}
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -100,6 +97,7 @@ jobs:
         run: |
           normal_file=$(basename "${{ steps.extract_apks.outputs.signed_normal }}")
           compatible_file=$(basename "${{ steps.extract_apks.outputs.signed_compatible }}")
+          # 提取版本号（以"Normal-"或"Compatible-"之后的部分为起点，以"-signed"之前的内容为终点）
           version=$(echo "$normal_file" | sed -E 's/.*-(Normal|Compatible)-(.*)-signed\.apk/\2/')
           echo "normal_file=$normal_file" >> $GITHUB_OUTPUT
           echo "compatible_file=$compatible_file" >> $GITHUB_OUTPUT
@@ -107,8 +105,8 @@ jobs:
 
       - name: Generate APKS Checksum
         run: |
-          sha256sum ${{ steps.extract_apks.outputs.signed_normal }} > CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-          sha256sum ${{ steps.extract_apks.outputs.signed_compatible }} > CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          sha256sum "${{ steps.extract_apks.outputs.signed_normal }}" > CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          sha256sum "${{ steps.extract_apks.outputs.signed_compatible }}" > CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
 
       - name: Get Commit Details
         id: commit_details
@@ -123,14 +121,21 @@ jobs:
               echo ""; \
               echo "Commits:"; \
               git log --format="  %h ([view commit](https://github.com/${{ github.repository }}/commit/%H)): %s by %an" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}; \
+            elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then \
+              echo "⚙️ Manual workflow run on ${{ github.ref_name }} by ${{ github.actor }}"; \
+              echo ""; \
+              echo "Latest commit:"; \
+              git log -1 --format="  %h ([view commit](https://github.com/${{ github.repository }}/commit/%H)): %s by %an"; \
             else \
               echo "ℹ️ Commit information for ${{ github.event_name }} event on ${{ github.ref_name }} by ${{ github.actor }}:"; \
               echo ""; \
               git log -1 --format="  %h ([view commit](https://github.com/${{ github.repository }}/commit/%H)): %s by %an"; \
             fi \
           )
-          echo "COMMIT_MESSAGE_BODY<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMIT_MESSAGE_BODY" >> $GITHUB_OUTPUT
+          # 转义 Telegram Markdown 特殊字符
+          COMMIT_MESSAGE_BODY_ESCAPED=$(echo "$COMMIT_MESSAGE_BODY" | sed -e 's/\\/\\\\/g' -e 's/_/\\_/g' -e 's/\*/\\*/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/(/\\(/g' -e 's/)/\\)/g' -e 's/#/\\#/g' -e 's/-/\\-/g')
+          echo "COMMIT_MESSAGE_BODY_ESCAPED<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_MESSAGE_BODY_ESCAPED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Send Combined Message
@@ -151,7 +156,7 @@ jobs:
               * Normal 为正常版本,适用于`Android 8.0`及以上的系统
               * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
 
-            ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
+            ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY_ESCAPED }}
           format: markdown
 
       - name: Send Normal APK
@@ -168,21 +173,54 @@ jobs:
           token: ${{ secrets.TG_BOT_TOKEN }}
           document: ${{ steps.extract_apks.outputs.signed_compatible }}
 
+      - name: Create Tag from Version
+        if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
+        run: |
+          VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
+          echo "Creating tag: $VERSION_TAG"
+          git tag "$VERSION_TAG"
+          git push origin "$VERSION_TAG"
+
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }}
           files: |
-            ${{ steps.extract_apks.outputs.signed_normal }}
             ${{ steps.extract_apks.outputs.signed_compatible }}
+            ${{ steps.extract_apks.outputs.signed_normal }}
             CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
             CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
           tag_name: ${{ steps.extract_info.outputs.version }}
           draft: false
+          append_body: true
+          generate_release_notes: true
+          body: |
+            ## ✨What's Changed
+
+            ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY_ESCAPED }}
+            > ## 下载说明
+              * Normal 为正常版本,适用于`Android 8.0`及以上的系统
+              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
+
+            > ~~墙内不再更新~~ 倒卖必死全家
+
+      - name: Sync Release to Target Repository
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: Xposed-Modules-Repo/fansirsqi.xposed.sesame
+          name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }}
+          files: |
+            ${{ steps.sign_normal_apk.outputs.signedFile }}
+            ${{ steps.sign_compatible_apk.outputs.signedFile }}
+            CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          token: ${{ secrets.TARGET_REPO_PAT }}
+          tag_name: ${{ steps.extract_info.outputs.version }}
+          draft: false
+          prerelease: ${{ steps.pre_release.outputs.IS_PRERELEASE }}
           append_body: false
           make_latest: true
           body: |
             📦 本 Release 同步自源仓库 [Sesame-TK](https://github.com/${{ github.repository }})
             ✨ **更新内容**:
-            ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY || '无更新说明' }}
+            ${{ github.event.release.body || '无更新说明' }}
