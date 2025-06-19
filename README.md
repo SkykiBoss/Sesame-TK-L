@@ -43,39 +43,31 @@
 </details> 
 <details> 
 <summary>TARGET_REPO_PAT报错</summary>   
-<h3>TARGET_REPO_PAT报错</h3>  
-步骤 1：创建个人访问令牌（PAT）
-<br>登录 GitHub 账户：确保您拥有目标仓库（Xposed-Modules-Repo/fansirsqi.xposed.sesame）的写入权限
-<br>访问 Token 生成页面：
-<br>打开 GitHub 开发者设置
-<br>或点击右上角头像 → Settings → 左侧菜单最下方 Developer settings → Personal access tokens → Tokens (classic)
-<br>生成新 Token：
-
-- 点击 **Generate new token** → 选择 **Generate new token (classic)**
-- 填写描述（如 `Sync Release to Xposed-Modules-Repo`）
-- 选择过期时间（建议选择 `No expiration`）
-- 选择权限（必须包含）：
-  ✅ `repo`（完全控制仓库）
-  ✅ `workflow`（允许操作工作流）
-https://docs.github.com/assets/cb-20363/images/help/settings/token_scopes.gif
-
-生成 Token：
-滚动到底部点击 Generate token 按钮
-立即复制 Token（离开页面后将无法再次查看！）
-步骤 2：将 PAT 添加到源仓库的 Secrets
-打开源仓库设置：
-进入您的源仓库（触发工作流的仓库）页面
-点击 Settings → Secrets and variables → Actions
-添加新 Secret：
-- 点击 **New repository secret**
-- 输入名称：`TARGET_REPO_PAT`（必须与工作流中的名称一致）
-- 在 Value 中粘贴刚才复制的 Token
-- 点击 **Add secret**
-
-| PAT变量名                      | 变量值                          |  
-|----------------------------|------------------------------|  
-| `TARGET_REPO_PAT`      | `abcdefg`Token |  
-
+<h3>请在Sesame-TK/.github/workflows
+/android.yml文件中删除如下代码</h3>  
+  
+```yaml
+- name: Sync Release to Target Repository
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: Xposed-Modules-Repo/fansirsqi.xposed.sesame # 目标仓库的拥有者和仓库名称
+          name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
+          files: |
+            ${{ steps.sign_normal_apk.outputs.signedFile }}
+            ${{ steps.sign_compatible_apk.outputs.signedFile }}
+            CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          token: ${{ secrets.TARGET_REPO_PAT }}
+          tag_name: ${{ steps.extract_info.outputs.version }}
+          draft: false
+          prerelease: ${{ steps.pre_release.outputs.IS_PRERELEASE }}
+          append_body: false
+          make_latest: true
+          body: |
+            📦 本 Release 同步自源仓库 [Sesame-TK](https://github.com/${{ github.repository }})
+            ✨ **更新内容**:
+            ${{ github.event.release.body || '无更新说明' }}
+  ```
 </details>  
 
 <details> <summary>TG BOT配置教程</summary>   
