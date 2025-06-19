@@ -594,6 +594,17 @@ public class Status {
         }
     }
 
+    /**
+     * 新增的：清除当天的某个标记
+     * @param flag 标记名
+     */
+    public static void clearFlag(String flag) {
+        if (getINSTANCE().flagList.contains(flag)) {
+            getINSTANCE().flagList.remove(flag);
+            save();
+        }
+    }
+
     public static Boolean canMemberPointExchangeBenefitToday(String benefitId) {
         return !getINSTANCE().memberPointExchangeBenefitLogList.contains(benefitId);
     }
