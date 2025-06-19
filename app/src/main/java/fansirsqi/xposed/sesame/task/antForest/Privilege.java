@@ -105,13 +105,13 @@ public class Privilege {
 
     private static void processSingleTask(JSONObject baseInfo, String taskType, String taskName, List<String> results) {
         String taskStatus = baseInfo.optString("taskStatus");
-        if (TASK_RECEIVED.equals(taskStatus)) {
-            Log.forest(YOUTH_PRIVILEGE_PREFIX + "[" + taskName + "]已领取");
-            return;
-        }
 
-        if (TASK_FINISHED.equals(taskStatus)) {
+        // ✅ 不管是 FINISHED 还是 RECEIVED 都执行领奖逻辑
+        if (TASK_FINISHED.equals(taskStatus) || TASK_RECEIVED.equals(taskStatus)) {
             handleFinishedTask(taskType, taskName, results);
+        } else {
+            Log.forest(YOUTH_PRIVILEGE_PREFIX + "[" + taskName + "]状态：" + taskStatus + "，跳过处理");
+            results.add("跳过");
         }
     }
 
