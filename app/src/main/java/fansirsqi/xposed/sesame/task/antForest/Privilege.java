@@ -15,8 +15,9 @@ import fansirsqi.xposed.sesame.data.Status;
 public class Privilege {
     private static final String TAG = Privilege.class.getSimpleName();
 
-    private static final String Flag = "youth_privilege_forest_received";
-    private static final String Flag2 = "youth_privilege_student_task";
+    private static final String FLAG_YOUTH_PRIVILEGE = "youth_privilege_forest_received";
+    private static final String FLAG_STUDENT_SIGN = "youth_privilege_student_task";
+
     private static final String YOUTH_PRIVILEGE_PREFIX = "青春特权🌸";
     private static final String STUDENT_SIGN_PREFIX = "青春特权🧧";
 
@@ -35,7 +36,7 @@ public class Privilege {
 
     public static boolean youthPrivilege() {
         try {
-            if (Status.hasFlagToday(Flag)) {
+            if (Status.hasFlagToday(FLAG_YOUTH_PRIVILEGE)) {
                 Log.record(YOUTH_PRIVILEGE_PREFIX + "今日已处理，跳过");
                 return false;
             }
@@ -45,21 +46,15 @@ public class Privilege {
                 processResults.addAll(processYouthPrivilegeTask(task));
             }
 
-            boolean allSuccess = true;
-            for (String result : processResults) {
-                if (!"处理成功".equals(result)) {
-                    allSuccess = false;
-                    break;
-                }
-            }
+            boolean allSuccess = processResults.stream().allMatch("处理成功"::equals);
 
             if (allSuccess) {
-                Status.setFlagToday(Flag);
+                Status.setFlagToday(FLAG_YOUTH_PRIVILEGE);
             }
             return allSuccess;
         } catch (Exception e) {
             Log.printStackTrace(TAG + "青春特权领取异常", e);
-            Status.clearFlag(Flag); // 允许重试
+            Status.clearFlag(FLAG_YOUTH_PRIVILEGE); // 允许重试
             return false;
         }
     }
@@ -111,7 +106,7 @@ public class Privilege {
     private static void processSingleTask(JSONObject baseInfo, String taskType, String taskName, List<String> results) {
         String taskStatus = baseInfo.optString("taskStatus");
         if (TASK_RECEIVED.equals(taskStatus)) {
-            Log.forest(YOUTH_PRIVILEGE_PREFIX + "[%s]已领取", taskName);
+            Log.forest(YOUTH_PRIVILEGE_PREFIX + "[" + taskName + "]已领取");
             return;
         }
 
@@ -141,7 +136,7 @@ public class Privilege {
                 return;
             }
 
-            if (Status.hasFlagToday(Flag2)) {
+            if (Status.hasFlagToday(FLAG_STUDENT_SIGN)) {
                 Log.record(STUDENT_SIGN_PREFIX + "今日已完成签到");
                 return;
             }
@@ -169,7 +164,7 @@ public class Privilege {
 
         JSONObject checkInInfo = result.optJSONObject("studentCheckInInfo");
         if (checkInInfo == null || "DO_TASK".equals(checkInInfo.optString("action"))) {
-            Status.setFlagToday(Flag2);
+            Status.setFlagToday(FLAG_STUDENT_SIGN);
             Log.record(STUDENT_SIGN_PREFIX + "今日已签到（通过状态）");
             return;
         }
@@ -195,13 +190,11 @@ public class Privilege {
         String resultDesc = result.optString("resultDesc", "签到成功");
 
         if (RPC_SUCCESS.equals(resultCode)) {
-            Status.setFlagToday(Flag2);
-            String logMessage = STUDENT_SIGN_PREFIX + tag + resultDesc;
-            Log.forest(logMessage);
+            Status.setFlagToday(FLAG_STUDENT_SIGN);
+            Log.forest(STUDENT_SIGN_PREFIX + tag + resultDesc);
         } else {
             String errorMsg = resultDesc.contains("不匹配") ? resultDesc + "可能账户不符合条件" : resultDesc;
-            String logMessage = STUDENT_SIGN_PREFIX + tag + "失败：" + errorMsg;
-            Log.error(TAG, logMessage);
+            Log.error(TAG, STUDENT_SIGN_PREFIX + tag + "失败：" + errorMsg);
         }
     }
 }
