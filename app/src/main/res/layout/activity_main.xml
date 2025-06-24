@@ -83,7 +83,7 @@
         android:layout_marginTop="12dp"
         android:fontFamily="sans-serif-smallcaps"
         android:gravity="center"
-        android:text="ALLG编译，与原版保持一致。👑"
+        android:text="ALLG编译，这是精简版本，与原版功能一致，但是大部分功能隐藏了（解决弹出警告）。👑"
         android:textColor="#FFD700"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="14sp"
