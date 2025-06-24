@@ -284,7 +284,7 @@ public class AntForest extends ModelTask {
 
         modelFields.addField(ForestMarket = new BooleanModelField("ForestMarket", "森林集市", false));
         modelFields.addField(youthPrivilege = new BooleanModelField("youthPrivilege", "青春特权 | 森林道具", false));
-        modelFields.addField(dailyCheckIn = new BooleanModelField("studentCheckIn", "青春特权 | 签到红包", false));
+      //modelFields.addField(dailyCheckIn = new BooleanModelField("studentCheckIn", "青春特权 | 签到红包", false));
 
         modelFields.addField(ecoLife = new BooleanModelField("ecoLife", "绿色行动 | 开关", false));
         modelFields.addField(ecoLifeOpen = new BooleanModelField("ecoLifeOpen", "绿色任务 |  自动开通", false));
