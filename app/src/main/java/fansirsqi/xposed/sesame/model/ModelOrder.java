@@ -30,7 +30,7 @@ public class ModelOrder {
 //          AntCooperate.class,//合种
 //          Reserve.class,//保护地
             AntSports.class,//运动
-//          AntMember.class,//会员
+            AntMember.class,//会员
 //          AntStall.class,//蚂蚁新村
 //          GreenFinance.class,//绿色经营
 //          AntBookRead.class,//读书
