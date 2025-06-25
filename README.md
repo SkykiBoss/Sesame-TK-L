@@ -24,11 +24,30 @@
 
 ❓ 访问异常请手动开启 平衡网络延迟选项，设置适当的延迟时间以及查询时间
 
-☀️ 对了，我自己用的支付宝版本是`10.6.88.9100`
+☀️ 对了，我自己用的官版支付宝版本`10.6.58.8000`和Play版支付宝版本`10.6.58.9100`
 
 💊 如果你想自己编译，请fork本项目
 
 📕 开发者或用户请看[维基](https://github.com/Fansirsqi/Sesame-TK/wiki)
+
+### 关于普通版与LITE（养老）版本的简介
+| 普通版功能                      | LITE版（养老）                          |  
+|----------------------------|------------------------------|  
+| <details><summary>基础功能</summary>启用模块<br>保持唤醒<br>执行间隔<br>模块休眠时间<br>定时执行<br>定时唤醒<br>只收能量时间<br>定时任务模式<br>超时重启<br>异常等待时间<br>开启异常通知<br>异常次数阈值<br>使用新接口<br>开启抓包<br>启用HOOK数据转发<br>HOOK数据转发地址<br>为支付宝申请后台运行权限<br>全部记录日志<br>气泡提示<br>开启状态栏禁删<br>只显示中文并设置时区<br>气泡纵向偏移</details>         | <details><summary>基础功能</summary>启用模块<br>保持唤醒<br>执行间隔<br>模块休眠时间<br>定时执行<br>定时唤醒<br>只收能量时间<br>定时任务模式<br>超时重启<br>异常等待时间<br>开启异常通知<br>异常次数阈值<br>使用新接口<br>开启抓包<br>启用HOOK数据转发<br>HOOK数据转发地址<br>为支付宝申请后台运行权限<br>全部记录日志<br>气泡提示<br>开启状态栏禁删<br>只显示中文并设置时区<br>气泡纵向偏移</details> |  
+| <details><summary>森林功能</summary>官网下载地址<br>开启森林<br>收集能量<br>一键收取<br>自动关闭6秒拼手速<br>能量雨<br>不收能量<br>赠送能量雨<br>兑换能量雨次卡<br>收取浇水金球<br>收取过期能量<br>双击卡<br>加速器<br>保护罩<br>炸弹卡<br>1.1倍能量卡<br>隐身卡<br>返水<br>赠送道具<br>收集道具<br>复活能量<br>活力值兑换<br>保护地巡护<br>合成宠物碎片<br>派遣动物伙伴<br>森林任务<br>森林寻宝任务<br>领取礼盒<br>健康医疗任务<br>森林集市<br>青春特权<br>绿色行动<br>查询间隔<br>收取间隔<br>双击间隔<br>平衡网络延迟<br>提前时间<br>尝试收取<br>重试间隔</details> | <details><summary>森林功能</summary>官网下载地址<br>开启森林<br>收集能量<br>一键收取<br>自动关闭6秒拼手速<br>能量雨<br>不收能量<br>赠送能量雨<br>兑换能量雨次卡<br>收取浇水金球<br>收取过期能量<br>双击卡<br>加速器<br>保护罩<br>炸弹卡<br>1.1倍能量卡<br>隐身卡<br>返水<br>赠送道具<br>收集道具<br>复活能量<br>活力值兑换<br>保护地巡护<br>合成宠物碎片<br>派遣动物伙伴<br>森林任务<br>森林寻宝任务<br>领取礼盒<br>健康医疗任务<br>森林集市<br>青春特权<br>绿色行动<br>查询间隔<br>收取间隔<br>双击间隔<br>平衡网络延迟<br>提前时间<br>尝试收取<br>重试间隔</details> |  
+| <details><summary>庄园功能</summary>按普通版为准</details> | <details><summary>庄园功能</summary>与普通版一致</details> |  
+| <details><summary>农场功能</summary>按普通版为准</details> | <details><summary>农场功能</summary>与普通版一致</details> |  
+| <details><summary>海洋功能</summary>按普通版为准</details> | <details><summary>海洋功能</summary>与普通版一致</details> |  
+| <details><summary>神奇物种功能</summary>按普通版为准</details> | <details><summary>神奇物种功能</summary>无此功能（关闭此项有效缓解弹窗次数）</details> |  
+| <details><summary>古树功能</summary>按普通版为准</details> | <details><summary>古树功能</summary>无此功能（（没用，浪费能量）</details> |  
+| <details><summary>合种功能</summary>按普通版为准</details> | <details><summary>合种功能</summary>无此功能（（没用，浪费能量）</details> |  
+| <details><summary保护地功能</summary>按普通版为准</details> | <details><summary>保护地功能</summary>无此功能（（没用，浪费能量）</details> |  
+| <details><summary>运动功能</summary>按普通版为准</details> | <details><summary>运动功能</summary>保留纯粹的运动</details> |  
+| <details><summary>会员功能</summary>按普通版为准</details> | <details><summary>会员功能</summary>无此功能（（保留会员签到和兑换功能，其他的全部扔了）</details> |  
+| <details><summary>新村功能</summary>按普通版为准</details> | <details><summary>合种功能</summary>无此功能（（没用，关闭此项有效缓解弹窗次数）</details> |  
+| <details><summary>绿色经营功能</summary>按普通版为准</details> | <details><summary>合种功能</summary>无此功能（关闭此项有效缓解弹窗次数）</details> |  
+| <details><summary>AI答题功能</summary>按普通版为准</details> | <details><summary>AI答题功能</summary>与普通版一致</details> |  
+| <details><summary>主题设置功能</summary>按普通版为准</details> | <details><summary>主题设置功能</summary>与普通版一致</details> |  
 <details> 
 <summary>README项目展示图替换教程</summary>   
 访问网址，把你的项目粘贴进去，制作好替换一下就行<a href="https://socialify.git.ci">Socialify</a>
