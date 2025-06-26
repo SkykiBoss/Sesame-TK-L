@@ -1,4 +1,4 @@
-name: Android CI
+name: 📦构建普通版本
 run-name: 📦 ${{ github.actor }} @ 构建普通版本
 
 on:
