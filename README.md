@@ -44,8 +44,8 @@
 | <details><summary保护地功能</summary>按普通版为准</details> | <details><summary>保护地功能</summary>无此功能（（没用，浪费能量）</details> |  
 | <details><summary>运动功能</summary>按普通版为准</details> | <details><summary>运动功能</summary>保留纯粹的运动</details> |  
 | <details><summary>会员功能</summary>按普通版为准</details> | <details><summary>会员功能</summary>无此功能（（保留会员签到和兑换功能，其他的全部扔了）</details> |  
-| <details><summary>新村功能</summary>按普通版为准</details> | <details><summary>合种功能</summary>无此功能（（没用，关闭此项有效缓解弹窗次数）</details> |  
-| <details><summary>绿色经营功能</summary>按普通版为准</details> | <details><summary>合种功能</summary>无此功能（关闭此项有效缓解弹窗次数）</details> |  
+| <details><summary>新村功能</summary>按普通版为准</details> | <details><summary>新村功能</summary>无此功能（（没用，关闭此项有效缓解弹窗次数）</details> |  
+| <details><summary>绿色经营功能</summary>按普通版为准</details> | <details><summary>绿色经营功能</summary>无此功能（关闭此项有效缓解弹窗次数）</details> |  
 | <details><summary>AI答题功能</summary>按普通版为准</details> | <details><summary>AI答题功能</summary>与普通版一致</details> |  
 | <details><summary>主题设置功能</summary>按普通版为准</details> | <details><summary>主题设置功能</summary>与普通版一致</details> |  
 <details> 
