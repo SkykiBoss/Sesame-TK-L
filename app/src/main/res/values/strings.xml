@@ -11,6 +11,12 @@ Please uninstall this APP within 24 hours. </font>
 </b>
 If you purchased it, please contact the seller for a refund or report the seller on the platform.
 ]]></string>
+    <string name="app_disclaimer">
+    This APP is developed for study and research, free and open source, prohibited for any commercial use, and prohibited from secondary modification and closed source distribution.
+        Please uninstall this APP within 24 hours. 
+ If you got it by purchase, please contact the seller for refund or report the seller on the platform. ⚠️
+</string>
+    
     <color name="color_alpha">#00000000</color>
     <color name="color_btn_down">#F0F0F0</color>
 
