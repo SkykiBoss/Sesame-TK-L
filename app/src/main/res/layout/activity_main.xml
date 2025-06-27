@@ -56,7 +56,7 @@
         android:layout_marginTop="12dp"
         android:fontFamily="sans-serif-smallcaps"
         android:gravity="center"
-        android:text="@string/build_target"
+        android:text="@string/bulid_target"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="14sp"
         app:layout_constraintTop_toBottomOf="@id/one_word"
@@ -74,7 +74,7 @@
         android:text="@string/build_version_1_0_0"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="14sp"
-        app:layout_constraintTop_toBottomOf="@id/build_target"
+        app:layout_constraintTop_toBottomOf="@id/bulid_target"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -90,7 +90,7 @@
         android:textColor="#FFD700"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="14sp"
-        app:layout_constraintTop_toBottomOf="@id/build_version"
+        app:layout_constraintTop_toBottomOf="@id/bulid_version"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -106,7 +106,7 @@
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="14sp"
         android:textColor="@android:color/holo_red_dark"
-        app:layout_constraintTop_toBottomOf="@id/build_author"
+        app:layout_constraintTop_toBottomOf="@id/bulid_author"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
