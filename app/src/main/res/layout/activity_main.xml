@@ -76,7 +76,7 @@
         android:layout_marginTop="20dp"
         android:fontFamily="sans-serif-smallcaps"
         android:gravity="center"
-        android:text="@string/bulid_version_1_0_0"
+        android:text="@string/build_version_1_0_0"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="14sp"
