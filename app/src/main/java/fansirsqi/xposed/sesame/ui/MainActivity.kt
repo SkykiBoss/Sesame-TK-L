@@ -61,8 +61,8 @@ class MainActivity : BaseActivity() {
         }
         setContentView(R.layout.activity_main)
         val mainImage = findViewById<View>(R.id.main_image)
-        val buildVersion = findViewById<TextView>(R.id.build_version)
-        val buildTarget = findViewById<TextView>(R.id.build_target)
+        val buildVersion = findViewById<TextView>(R.id.bulid_version)
+        val buildTarget = findViewById<TextView>(R.id.bulid_target)
         oneWord = findViewById(R.id.one_word)
         // 获取并设置一言句子
         try {
