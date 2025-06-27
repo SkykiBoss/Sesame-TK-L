@@ -60,7 +60,7 @@
     <string name="feed_friend_animal_list">喂好友小鸡列表</string>
     <string name="notify_friend">通知好友赶鸡</string>
     <string name="don_t_notify_friend_list">不通知赶鸡名单</string>
-    <string name="other_configuration">查看其他日志</string>
+    <string name="other_configuration">其他</string>
     <string name="receive_point">积分</string>
     <string name="open_treasure_box">开启运动宝箱</string>
     <string name="receive_coin_asset">收集运动币</string>
@@ -96,7 +96,7 @@
     <string name="sync_step_count">自定义同步步数</string>
     <string name="use_double_card">使用双击卡</string>
     <string name="wait_when_exception">异常等待时间(分钟)</string>
-    <string name="other_log">其他</string>
+    <string name="other_log">查看其他日志</string>
     <string name="search">搜索</string>
     <string name="last">上一个</string>
     <string name="next">下一个</string>
