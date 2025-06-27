@@ -34,7 +34,6 @@ import fansirsqi.xposed.sesame.util.Log
 import fansirsqi.xposed.sesame.util.maps.UserMap
 import fansirsqi.xposed.sesame.util.PermissionUtil
 import fansirsqi.xposed.sesame.util.ToastUtil
-import java.util.Calendar
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -79,7 +78,6 @@ class MainActivity : BaseActivity() {
         }
 
         mainImage?.setOnLongClickListener { v: View ->
-            // 当视图被长按时执行的操作
             if (v.id == R.id.main_image) {
                 val data = "file://" + Files.getDebugLogFile().absolutePath
                 val it = Intent(this@MainActivity, HtmlViewerActivity::class.java)
@@ -87,28 +85,28 @@ class MainActivity : BaseActivity() {
                 it.putExtra("canClear", true)
                 it.data = data.toUri()
                 startActivity(it)
-                return@setOnLongClickListener true // 表示事件已处理
+                return@setOnLongClickListener true
             }
-            false // 如果不是目标视图，返回false
+            false
         }
         FansirsqiUtil.getOneWord(
             object : OneWordCallback {
                 override fun onSuccess(result: String?) {
-                    runOnUiThread { oneWord.text = result } // 在主线程中更新UI
+                    runOnUiThread { oneWord.text = result }
                 }
 
                 override fun onFailure(error: String?) {
-                    runOnUiThread { oneWord.text = error } // 在主线程中更新UI
+                    runOnUiThread { oneWord.text = error }
                 }
             })
-        buildVersion.text = "Build Version: " + ViewAppInfo.appVersion // 版本信息
-        buildTarget.text = "Build Target: " + ViewAppInfo.appBuildTarget // 编译日期信息
+        buildVersion.text = "Build Version: " + ViewAppInfo.appVersion
+        buildTarget.text = "Build Target: " + ViewAppInfo.appBuildTarget
     }
 
     override fun onResume() {
         super.onResume()
         if (hasPermissions) {
-            try { //打开设置前需要确认设置了哪个UI
+            try {
                 UIConfig.load()
             } catch (e: Exception) {
                 Log.printStackTrace(e)
@@ -135,8 +133,8 @@ class MainActivity : BaseActivity() {
                 }
                 userNameList.add(0, "默认")
                 userEntityList.add(0, null)
-                userNameArray = userNameList.toTypedArray<String>()
-                userEntityArray = userEntityList.toTypedArray<UserEntity?>()
+                userNameArray = userNameList.toTypedArray()
+                userEntityArray = userEntityList.toTypedArray()
             } catch (e: Exception) {
                 userNameArray = arrayOf("默认")
                 userEntityArray = arrayOf(null)
@@ -163,7 +161,8 @@ class MainActivity : BaseActivity() {
                 data += Files.getFarmLogFile().absolutePath
             }
 
-            R.id.btn_other_log -> {
+            // 替换 btn_other_log 为 btn_view_all_log_file
+            R.id.btn_view_all_log_file -> {
                 data += Files.getOtherLogFile().absolutePath
             }
 
@@ -183,8 +182,8 @@ class MainActivity : BaseActivity() {
                 return
             }
 
-            R.id.btn_friend_watch -> {
-
+            // 替换 btn_friend_watch 为 btn_view_error_log_file
+            R.id.btn_view_error_log_file -> {
                 showSelectionDialog(
                     "🤣 请选择有效账户[别选默认]",
                     userNameArray,
@@ -193,8 +192,6 @@ class MainActivity : BaseActivity() {
                     {},
                     false
                 )
-
-
                 return
             }
 
@@ -205,11 +202,11 @@ class MainActivity : BaseActivity() {
                     FansirsqiUtil.getOneWord(
                         object : OneWordCallback {
                             override fun onSuccess(result: String?) {
-                                runOnUiThread { oneWord.text = result } // 在主线程中更新UI
+                                runOnUiThread { oneWord.text = result }
                             }
 
                             override fun onFailure(error: String?) {
-                                runOnUiThread { oneWord.text = error } // 在主线程中更新UI
+                                runOnUiThread { oneWord.text = error }
                             }
                         })
                 }.start()
@@ -223,10 +220,8 @@ class MainActivity : BaseActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         try {
-            // 使用清单文件中定义的完整别名
             val aliasComponent = ComponentName(this, General.MODULE_PACKAGE_UI_ICON)
             val state = packageManager.getComponentEnabledSetting(aliasComponent)
-            // 注意状态判断逻辑修正
             val isEnabled = state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             menu.add(0, 1, 1, R.string.hide_the_application_icon)
                 .setCheckable(true).isChecked = !isEnabled
@@ -266,9 +261,7 @@ class MainActivity : BaseActivity() {
                     PackageManager.DONT_KILL_APP
                 )
 
-                // 提示用户需要重启启动器才能看到效果
-                Toast.makeText(this, "设置已保存，可能需要重启桌面才能生效", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "设置已保存，可能需要重启桌面才能生效", Toast.LENGTH_SHORT).show()
                 return true
             }
 
@@ -312,10 +305,10 @@ class MainActivity : BaseActivity() {
                 startActivity(captureIt)
             }
 
-            6 ->                 // 扩展功能
-                startActivity(Intent(this, ExtendActivity::class.java))
+            6 -> startActivity(Intent(this, ExtendActivity::class.java))
 
             7 -> selectSettingUid()
+
             8 -> AlertDialog.Builder(this)
                 .setTitle("⚠️ 警告")
                 .setMessage("🤔 确认清除所有模块配置？")
@@ -352,7 +345,6 @@ class MainActivity : BaseActivity() {
 
         val length = userNameArray.size
         if (length in 1..2) {
-            // 定义超时时间（单位：毫秒）
             val timeoutMillis: Long = 800
             Thread {
                 try {
@@ -372,7 +364,8 @@ class MainActivity : BaseActivity() {
     }
 
     private fun showSelectionDialog(
-        title: String?, options: Array<String>,
+        title: String?,
+        options: Array<String>,
         onItemSelected: Consumer<Int>,
         negativeButtonText: String?,
         onNegativeButtonClick: Runnable,
@@ -397,7 +390,6 @@ class MainActivity : BaseActivity() {
 
         val length = options.size
         if (showDefaultOption && length > 0 && length < 3) {
-            // 定义超时时间（单位：毫秒）
             val timeoutMillis: Long = 800
             Thread {
                 try {
@@ -415,7 +407,6 @@ class MainActivity : BaseActivity() {
             }.start()
         }
     }
-
 
     private fun goFriendWatch(index: Int) {
         val userEntity = userEntityArray[index]
@@ -454,26 +445,9 @@ class MainActivity : BaseActivity() {
         Log.runtime(TAG, "updateSubTitle$runType")
         baseTitle = ViewAppInfo.appTitle + "[" + runType + "]"
         when (runType) {
-            RunType.DISABLE.nickName -> setBaseTitleTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.not_active_text
-                )
-            )
-
-            RunType.ACTIVE.nickName -> setBaseTitleTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.active_text
-                )
-            )
-
-            RunType.LOADED.nickName -> setBaseTitleTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.textColorPrimary
-                )
-            )
+            RunType.DISABLE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.not_active_text))
+            RunType.ACTIVE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.active_text))
+            RunType.LOADED.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary))
         }
     }
 }
