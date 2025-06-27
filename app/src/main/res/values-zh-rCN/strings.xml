@@ -60,7 +60,7 @@
     <string name="feed_friend_animal_list">喂好友小鸡列表</string>
     <string name="notify_friend">通知好友赶鸡</string>
     <string name="don_t_notify_friend_list">不通知赶鸡名单</string>
-    <string name="other_configuration">其他</string>
+    <string name="other_configuration">查看其他日志</string>
     <string name="receive_point">积分</string>
     <string name="open_treasure_box">开启运动宝箱</string>
     <string name="receive_coin_asset">收集运动币</string>
@@ -133,7 +133,7 @@
     <string name="start_at_0_o_clock">0点整执行</string>
     <string name="start_at_7_o_clock">7点前启动</string>
     <string name="tiyubiz">文体中心</string>
-    <string name="friend_watch">好友</string>
+    <string name="friend_watch">查询好友列表</string>
     <string name="user_patrol">巡护森林</string>
     <string name="toast_vertical_offset">气泡纵向偏移</string>
     <string name="animal_game_time">小鸡游戏时间</string>
