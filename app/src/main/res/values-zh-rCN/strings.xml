@@ -204,5 +204,7 @@
     <string name="the_image_of_unactivated">The image of unactivated</string>
     <string name="debug_tips">请在debug日志查看结果！</string>
     <string name="clear_photo">清空光盘行动图片💿</string>
+    <string name="error_log_file">异常日志</string>
+    <string name="all_log_file">全部日志</string>
 
 </resources>
