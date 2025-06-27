@@ -70,7 +70,7 @@
 
     <!-- 构建版本 -->
     <TextView
-        android:id="@+id/bulid_version"
+        android:id="@+id/build_version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
@@ -100,7 +100,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bulid_version" />
+        app:layout_constraintTop_toBottomOf="@id/build_version" />
 
     <!-- 官方声明 -->
     <TextView
@@ -222,7 +222,8 @@
             app:layout_constraintEnd_toStartOf="@id/btn_view_all_log_file"
             app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btn_forest_log" />
+            app:layout_constraintTop_toBottomOf="@id/btn_forest_log"
+            app:layout_constraintHorizontal_weight="1.5" />
 
         <!-- 其他日志（移下来） -->
         <com.google.android.material.button.MaterialButton
@@ -244,7 +245,8 @@
             app:iconTint="@null"
             app:layout_constraintEnd_toStartOf="@id/btn_settings"
             app:layout_constraintStart_toEndOf="@id/btn_view_error_log_file"
-            app:layout_constraintTop_toBottomOf="@id/btn_farm_log" />
+            app:layout_constraintTop_toBottomOf="@id/btn_farm_log"
+            app:layout_constraintHorizontal_weight="1.5" />
 
         <!-- 设置 -->
         <com.google.android.material.button.MaterialButton
