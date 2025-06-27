@@ -161,9 +161,12 @@ class MainActivity : BaseActivity() {
                 data += Files.getFarmLogFile().absolutePath
             }
 
-            // 替换 btn_other_log 为 btn_view_all_log_file
+            R.id.btn_view_error_log_file -> {
+               data += Files.getErrorLogFile().absolutePath  // ✅ 修正
+            }
+
             R.id.btn_view_all_log_file -> {
-                data += Files.getOtherLogFile().absolutePath
+               data += Files.getRecordLogFile().absolutePath // ✅ 修正
             }
 
             R.id.btn_github -> {
@@ -182,18 +185,6 @@ class MainActivity : BaseActivity() {
                 return
             }
 
-            // 替换 btn_friend_watch 为 btn_view_error_log_file
-            R.id.btn_view_error_log_file -> {
-                showSelectionDialog(
-                    "🤣 请选择有效账户[别选默认]",
-                    userNameArray,
-                    { index: Int -> this.goFriendWatch(index) },
-                    "😡 老子不选了，滚",
-                    {},
-                    false
-                )
-                return
-            }
 
             R.id.one_word -> {
                 Thread {
