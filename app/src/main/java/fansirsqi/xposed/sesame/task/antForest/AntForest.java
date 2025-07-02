@@ -103,7 +103,6 @@ public class AntForest extends ModelTask {
     private final Average delayTimeMath = new Average(5);
     private final ObjReference<Long> collectEnergyLockLimit = new ObjReference<>(0L);
     private final Object doubleCardLockObj = new Object();
-    private BooleanModelField masterSwitch; // 总开关 | 是否启用蚂蚁森林任务
     private BooleanModelField expiredEnergy; // 收取过期能量
     private BooleanModelField collectEnergy;
     private BooleanModelField energyRain;
@@ -228,7 +227,6 @@ public class AntForest extends ModelTask {
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
-        modelFields.addField(masterSwitch = new BooleanModelField("masterSwitch", "总开关 | 是否启用蚂蚁森林任务", true));
         modelFields.addField(collectEnergy = new BooleanModelField("collectEnergy", "收集能量 | 开关", false));
         modelFields.addField(batchRobEnergy = new BooleanModelField("batchRobEnergy", "一键收取 | 开关", false));
         modelFields.addField(closeWhackMole = new BooleanModelField("closeWhackMole", "自动关闭6秒拼手速 | 开关", false));
@@ -286,7 +284,7 @@ public class AntForest extends ModelTask {
 
         modelFields.addField(ForestMarket = new BooleanModelField("ForestMarket", "森林集市", false));
         modelFields.addField(youthPrivilege = new BooleanModelField("youthPrivilege", "青春特权 | 森林道具", false));
-      //modelFields.addField(dailyCheckIn = new BooleanModelField("studentCheckIn", "青春特权 | 签到红包", false));
+        //modelFields.addField(dailyCheckIn = new BooleanModelField("studentCheckIn", "青春特权 | 签到红包", false));
 
         modelFields.addField(ecoLife = new BooleanModelField("ecoLife", "绿色行动 | 开关", false));
         modelFields.addField(ecoLifeOpen = new BooleanModelField("ecoLifeOpen", "绿色任务 |  自动开通", false));
@@ -304,23 +302,18 @@ public class AntForest extends ModelTask {
     }
 
     @Override
-public Boolean check() {
-    // 添加：判断 masterSwitch 是否关闭
-    if (masterSwitch != null && !masterSwitch.getValue()) {
-        Log.record(TAG, "总开关关闭，停止执行蚂蚁森林任务");
-        return false;
+    public Boolean check() {
+        if (RuntimeInfo.getInstance().getLong(RuntimeInfo.RuntimeInfoKey.ForestPauseTime) > System.currentTimeMillis()) {
+            Log.record(getName() + "任务-异常等待中，暂不执行检测！");
+            return false;
+        } else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
+            Log.record(TAG, "💤 模块休眠时间【" + BaseModel.getModelSleepTime().getValue() + "】停止执行" + getName() + "任务！");
+            return false;
+        } else {
+            return true;
+        }
     }
 
-    if (RuntimeInfo.getInstance().getLong(RuntimeInfo.RuntimeInfoKey.ForestPauseTime) > System.currentTimeMillis()) {
-        Log.record(getName() + "任务-异常等待中，暂不执行检测！");
-        return false;
-    } else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
-        Log.record(TAG, "💤 模块休眠时间【" + BaseModel.getModelSleepTime().getValue() + "】停止执行" + getName() + "任务！");
-        return false;
-    } else {
-        return true;
-    }
-}
     @Override
     public Boolean isSync() {
         return true;
