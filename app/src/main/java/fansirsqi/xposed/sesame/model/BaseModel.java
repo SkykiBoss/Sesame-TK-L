@@ -26,13 +26,13 @@ public class BaseModel extends Model {
     @Getter public static final IntegerModelField.MultiplyIntegerModelField checkInterval =
             new IntegerModelField.MultiplyIntegerModelField("checkInterval", "执行间隔(分钟)", 50, 1, 12 * 60, 60_000);
     @Getter public static final ListModelField.ListJoinCommaToStringModelField execAtTimeList =
-            new ListModelField.ListJoinCommaToStringModelField("execAtTimeList", "定时执行(关闭:-1)", ListUtil.newArrayList("0700", "0730", "1200", "1230", "1700", "1730", "2000", "2030", "2359"));
+            new ListModelField.ListJoinCommaToStringModelField("execAtTimeList", "定时执行(关闭:-1)", ListUtil.newArrayList("-1"));
     @Getter public static final ListModelField.ListJoinCommaToStringModelField wakenAtTimeList =
-            new ListModelField.ListJoinCommaToStringModelField("wakenAtTimeList", "定时唤醒(关闭:-1)", ListUtil.newArrayList("0650", "2350"));
+            new ListModelField.ListJoinCommaToStringModelField("wakenAtTimeList", "定时唤醒(关闭:-1)", ListUtil.newArrayList("-1"));
     @Getter public static final ListModelField.ListJoinCommaToStringModelField energyTime =
-            new ListModelField.ListJoinCommaToStringModelField("energyTime", "只收能量时间(范围|关闭:-1)", ListUtil.newArrayList("0700-0730"));
+            new ListModelField.ListJoinCommaToStringModelField("energyTime", "只收能量时间(范围|关闭:-1)", ListUtil.newArrayList("-1"));
     @Getter public static final ListModelField.ListJoinCommaToStringModelField modelSleepTime =
-            new ListModelField.ListJoinCommaToStringModelField("modelSleepTime", "模块休眠时间(范围|关闭:-1)", ListUtil.newArrayList("0100-0540"));
+            new ListModelField.ListJoinCommaToStringModelField("modelSleepTime", "模块休眠时间(范围|关闭:-1)", ListUtil.newArrayList("-1"));
     @Getter public static final ChoiceModelField timedTaskModel = new ChoiceModelField("timedTaskModel", "定时任务模式", TimedTaskModel.SYSTEM, TimedTaskModel.nickNames);
     @Getter public static final BooleanModelField timeoutRestart = new BooleanModelField("timeoutRestart", "超时重启", true);
     @Getter public static final IntegerModelField.MultiplyIntegerModelField waitWhenException =
@@ -40,7 +40,7 @@ public class BaseModel extends Model {
     @Getter public static final BooleanModelField errNotify = new BooleanModelField("errNotify", "开启异常通知", false);
     @Getter public static final IntegerModelField setMaxErrorCount = new IntegerModelField("setMaxErrorCount", "异常次数阈值", 8);
     @Getter public static final BooleanModelField newRpc = new BooleanModelField("newRpc", "使用新接口(最低支持v10.3.96.8100)", true);
-    @Getter public static final BooleanModelField debugMode = new BooleanModelField("debugMode", "开启抓包(基于新接口)", false);
+    @Getter public static final BooleanModelField debugMode = new BooleanModelField("debugMode", "开启抓包(基于新接口)", true);
     @Getter public static final BooleanModelField batteryPerm = new BooleanModelField("batteryPerm", "为支付宝申请后台运行权限", true);
     @Getter public static final BooleanModelField recordLog = new BooleanModelField("recordLog", "全部 | 记录日志", true);
     @Getter public static final BooleanModelField showToast = new BooleanModelField("showToast", "气泡提示", true);
@@ -55,15 +55,15 @@ public class BaseModel extends Model {
     @Getter public static final BooleanModelField enableForestGroup = new BooleanModelField("enableForestGroup", "🌲 启用森林类功能", true);
     @Getter public static final BooleanModelField enableFarmGroup = new BooleanModelField("enableFarmGroup", "🐔 启用庄园类功能", true);
     @Getter public static final BooleanModelField enableOrchardGroup = new BooleanModelField("enableOrchardGroup", "🌾 启用农场类功能", true);
-    @Getter public static final BooleanModelField enableOceanGroup = new BooleanModelField("enableOceanGroup", "🐟 启用海洋类功能", true);
-    @Getter public static final BooleanModelField enableDodoGroup = new BooleanModelField("enableDodoGroup", "🦕 启用神奇物种类功能", true);
-    @Getter public static final BooleanModelField enableTreeGroup = new BooleanModelField("enableTreeGroup", "🌳 启用古树类功能", true);
-    @Getter public static final BooleanModelField enableCooperateGroup = new BooleanModelField("enableCooperateGroup", "🤝 启用合种类功能", true);
-    @Getter public static final BooleanModelField enableReserveGroup = new BooleanModelField("enableReserveGroup", "🏞 启用保护地类功能", true);
+    @Getter public static final BooleanModelField enableOceanGroup = new BooleanModelField("enableOceanGroup", "🐟 启用海洋类功能", false);
+    @Getter public static final BooleanModelField enableDodoGroup = new BooleanModelField("enableDodoGroup", "🦕 启用神奇物种类功能", false);
+    @Getter public static final BooleanModelField enableTreeGroup = new BooleanModelField("enableTreeGroup", "🌳 启用古树类功能", false);
+    @Getter public static final BooleanModelField enableCooperateGroup = new BooleanModelField("enableCooperateGroup", "🤝 启用合种类功能", false);
+    @Getter public static final BooleanModelField enableReserveGroup = new BooleanModelField("enableReserveGroup", "🏞 启用保护地类功能", false);
     @Getter public static final BooleanModelField enableSportsGroup = new BooleanModelField("enableSportsGroup", "🏃 启用运动类功能", true);
-    @Getter public static final BooleanModelField enableMemberGroup = new BooleanModelField("enableMemberGroup", "👤 启用会员类功能", true);
-    @Getter public static final BooleanModelField enableStallGroup = new BooleanModelField("enableStallGroup", "🛒 启用蚂蚁新村类功能", true);
-    @Getter public static final BooleanModelField enableGreenGroup = new BooleanModelField("enableGreenGroup", "🌱 启用绿色经营类功能", true);
+    @Getter public static final BooleanModelField enableMemberGroup = new BooleanModelField("enableMemberGroup", "👤 启用会员类功能", false);
+    @Getter public static final BooleanModelField enableStallGroup = new BooleanModelField("enableStallGroup", "🛒 启用蚂蚁新村类功能", false);
+    @Getter public static final BooleanModelField enableGreenGroup = new BooleanModelField("enableGreenGroup", "🌱 启用绿色经营类功能", false);
     @Getter public static final BooleanModelField enableAIGroup = new BooleanModelField("enableAIGroup", "🧠 启用AI答题类功能", true);
 
     @Override
