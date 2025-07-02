@@ -64,10 +64,6 @@ public class AntFarm extends ModelTask {
     private String ownerFarmId;
     private Animal[] animals;
     private Animal ownerAnimal = new Animal();
-     /**
-     * 新增总开关字段
-     */
-    private BooleanModelField masterSwitch;
     private static final ObjectMapper objectMapper = new ObjectMapper();
     /**
      * 小鸡饲料g
@@ -214,8 +210,6 @@ public class AntFarm extends ModelTask {
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
-        // 总开关，默认开启
-        modelFields.addField(masterSwitch = new BooleanModelField("masterSwitch", "总开关 | 是否启用庄园任务", true));
         modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2359"));
         modelFields.addField(sleepMinutes = new IntegerModelField("sleepMinutes", "小鸡睡觉时长(分钟)", 10 * 59, 1, 10 * 60));
         modelFields.addField(recallAnimalType = new ChoiceModelField("recallAnimalType", "召回小鸡", RecallAnimalType.ALWAYS, RecallAnimalType.nickNames));
@@ -259,7 +253,7 @@ public class AntFarm extends ModelTask {
         modelFields.addField(family = new BooleanModelField("family", "家庭 | 开启", false));
         modelFields.addField(familyOptions = new SelectModelField("familyOptions", "家庭 | 选项", new LinkedHashSet<>(), OtherEntityProvider.farmFamilyOption()));
         modelFields.addField(notInviteList = new SelectModelField("notInviteList", "家庭 | 好友分享排除列表", new LinkedHashSet<>(), AlipayUser::getList));
-//      modelFields.addField(giftFamilyDrawFragment = new StringModelField("giftFamilyDrawFragment", "家庭 | 扭蛋碎片赠送用户ID(配置目录查看)", ""));
+//        modelFields.addField(giftFamilyDrawFragment = new StringModelField("giftFamilyDrawFragment", "家庭 | 扭蛋碎片赠送用户ID(配置目录查看)", ""));
         modelFields.addField(paradiseCoinExchangeBenefit = new BooleanModelField("paradiseCoinExchangeBenefit", "小鸡乐园 | 兑换权益", false));
         modelFields.addField(paradiseCoinExchangeBenefitList = new SelectModelField("paradiseCoinExchangeBenefitList", "小鸡乐园 | 权益列表", new LinkedHashSet<>(), ParadiseCoinBenefit::getList));
         return modelFields;
@@ -268,27 +262,21 @@ public class AntFarm extends ModelTask {
     @Override
     public void boot(ClassLoader classLoader) {
         super.boot(classLoader);
-        RpcIntervalLimit.INSTANCE.addIntervalLimit("com.alipay.antfarm.enterFarm", 2359);
+        RpcIntervalLimit.INSTANCE.addIntervalLimit("com.alipay.antfarm.enterFarm", 2000);
     }
 
     @Override
     public Boolean check() {
-      // 先判断总开关
-    if (masterSwitch != null && !masterSwitch.getValue()) {
-        Log.record(TAG, "总开关关闭，停止执行庄园任务");
-        return false;
+        if (TaskCommon.IS_ENERGY_TIME) {
+            Log.record(TAG, "⏸ 当前为只收能量时间【" + BaseModel.getEnergyTime().getValue() + "】，停止执行" + getName() + "任务！");
+            return false;
+        } else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
+            Log.record(TAG, "💤 模块休眠时间【" + BaseModel.getModelSleepTime().getValue() + "】停止执行" + getName() + "任务！");
+            return false;
+        } else {
+            return true;
+        }
     }
-
-    if (TaskCommon.IS_ENERGY_TIME) {
-        Log.record(TAG, "⏸ 当前为只收能量时间【" + BaseModel.getEnergyTime().getValue() + "】，停止执行" + getName() + "任务！");
-        return false;
-    } else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
-        Log.record(TAG, "💤 模块休眠时间【" + BaseModel.getModelSleepTime().getValue() + "】停止执行" + getName() + "任务！");
-        return false;
-    } else {
-        return true;
-    }
-}
 
     @Override
     public void run() {
