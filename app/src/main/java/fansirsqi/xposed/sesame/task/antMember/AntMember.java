@@ -54,8 +54,6 @@ public class AntMember extends ModelTask {
   @Override
   public ModelFields getFields() {
     ModelFields modelFields = new ModelFields();
-    // ✅ 添加总开关（推荐放在最上方）
-    modelFields.addField(enableAll = new BooleanModelField("enableAll", "启用功能", false));
     modelFields.addField(memberSign = new BooleanModelField("memberSign", "会员签到", false));
     //modelFields.addField(memberTask = new BooleanModelField("memberTask", "会员任务", false));
     modelFields.addField(memberPointExchangeBenefit = new BooleanModelField("memberPointExchangeBenefit", "会员积分 | 兑换权益", false));
@@ -74,22 +72,17 @@ public class AntMember extends ModelTask {
     return modelFields;
   }
   @Override
-public Boolean check() {
-    if (!enableAll.getValue()) {
-        Log.record(TAG, "🛑 未启用该模块总开关，跳过任务");
-        return false;
-    }
-
-    if (TaskCommon.IS_ENERGY_TIME) {
-        Log.record(TAG,"⏸ 当前为只收能量时间【"+ BaseModel.getEnergyTime().getValue() +"】，停止执行" + getName() + "任务！");
-        return false;
-    } else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
-        Log.record(TAG,"💤 模块休眠时间【"+ BaseModel.getModelSleepTime().getValue() +"】停止执行" + getName() + "任务！");
-        return false;
+  public Boolean check() {
+    if (TaskCommon.IS_ENERGY_TIME){
+      Log.record(TAG,"⏸ 当前为只收能量时间【"+ BaseModel.getEnergyTime().getValue() +"】，停止执行" + getName() + "任务！");
+      return false;
+    }else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
+      Log.record(TAG,"💤 模块休眠时间【"+ BaseModel.getModelSleepTime().getValue() +"】停止执行" + getName() + "任务！");
+      return false;
     } else {
-        return true;
+      return true;
     }
-}
+  }
   @Override
   public void run() {
     try {
