@@ -34,12 +34,12 @@ public class BaseModel extends Model {
     /** 指定执行时间点（多个） */
     @Getter public static final ListModelField.ListJoinCommaToStringModelField execAtTimeList =
             new ListModelField.ListJoinCommaToStringModelField("execAtTimeList", "定时执行(关闭:-1)",
-                    ListUtil.newArrayList("0700", "0730", "1200", "1230", "1700", "1730", "2000", "2030", "2359"));
+                    ListUtil.newArrayList("-1"));
 
     /** 定时唤醒时间点 */
     @Getter public static final ListModelField.ListJoinCommaToStringModelField wakenAtTimeList =
             new ListModelField.ListJoinCommaToStringModelField("wakenAtTimeList", "定时唤醒(关闭:-1)",
-                    ListUtil.newArrayList("0650", "2350"));
+                    ListUtil.newArrayList("-1"));
 
     /** 只收能量的时间段 */
     @Getter public static final ListModelField.ListJoinCommaToStringModelField energyTime =
@@ -49,7 +49,7 @@ public class BaseModel extends Model {
     /** 模块休眠时间段（任务不执行） */
     @Getter public static final ListModelField.ListJoinCommaToStringModelField modelSleepTime =
             new ListModelField.ListJoinCommaToStringModelField("modelSleepTime", "模块休眠时间(范围|关闭:-1)",
-                    ListUtil.newArrayList("0100-0540"));
+                    ListUtil.newArrayList("-1"));
 
     /** 任务执行模式（系统计时 / 程序计时） */
     @Getter public static final ChoiceModelField timedTaskModel =
@@ -72,7 +72,7 @@ public class BaseModel extends Model {
     @Getter public static final BooleanModelField newRpc = new BooleanModelField("newRpc", "使用新接口(最低支持v10.3.96.8100)", true);
 
     /** 是否启用抓包调试模式 */
-    @Getter public static final BooleanModelField debugMode = new BooleanModelField("debugMode", "开启抓包(基于新接口)", false);
+    @Getter public static final BooleanModelField debugMode = new BooleanModelField("debugMode", "开启抓包(基于新接口)", true);
 
     /** 是否申请后台运行权限（电池优化） */
     @Getter public static final BooleanModelField batteryPerm = new BooleanModelField("batteryPerm", "为支付宝申请后台运行权限", true);
