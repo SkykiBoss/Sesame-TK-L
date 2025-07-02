@@ -1,13 +1,10 @@
-package fansirsqi.xposed.sesame.annotation;
+// fansirsqi.xposed.sesame.model.annotation.ModuleGroupSwitch.java
+package fansirsqi.xposed.sesame.model.annotation;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.*;
 
-/**
- * 用于标记模块所属功能组字段（来自 BaseModel）
- * 比如：@ModuleGroup("enableMemberGroup")
- */
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ModuleGroup {
-    String value();
+public @interface ModuleGroupSwitch {
+    String value(); // BaseModel 中的字段名
 }
