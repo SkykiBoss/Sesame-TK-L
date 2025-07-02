@@ -1,7 +1,5 @@
 package fansirsqi.xposed.sesame.model;
 
-import java.util.concurrent.ExecutorService;
-
 import fansirsqi.xposed.sesame.model.modelFieldExt.BooleanModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.ChoiceModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.IntegerModelField;
@@ -11,7 +9,7 @@ import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.ListUtil;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.RandomUtil;
-import fansirsqi.xposed.sesame.util.IdMapManager;
+import fansirsqi.xposed.sesame.util.maps.IdMapManager;
 import fansirsqi.xposed.sesame.util.maps.BeachMap;
 import lombok.Getter;
 
@@ -24,7 +22,6 @@ public class BaseModel extends Model {
     private static final String TAG = "BaseModel";
 
     // ===================== 基础功能字段 =====================
-
     @Getter public static final BooleanModelField stayAwake = new BooleanModelField("stayAwake", "保持唤醒", true);
     @Getter public static final IntegerModelField.MultiplyIntegerModelField checkInterval =
             new IntegerModelField.MultiplyIntegerModelField("checkInterval", "执行间隔(分钟)", 50, 1, 12 * 60, 60_000);
@@ -55,7 +52,6 @@ public class BaseModel extends Model {
     @Getter static final StringModelField sendHookDataUrl = new StringModelField("sendHookDataUrl", "Hook数据转发地址", "http://127.0.0.1:9527/hook");
 
     // ===================== 各模块启用开关字段 =====================
-
     @Getter public static final BooleanModelField enableAntForest     = new BooleanModelField("enableAntForest", "启用蚂蚁森林", true);
     @Getter public static final BooleanModelField enableAntFarm       = new BooleanModelField("enableAntFarm", "启用蚂蚁庄园", true);
     @Getter public static final BooleanModelField enableAntOrchard    = new BooleanModelField("enableAntOrchard", "启用蚂蚁农场", true);
@@ -71,7 +67,6 @@ public class BaseModel extends Model {
     @Getter public static final BooleanModelField enableAnswerAI      = new BooleanModelField("enableAnswerAI", "启用AI答题", true);
 
     // ===================== 模型元数据定义 =====================
-
     @Override
     public String getName() {
         return "基础";
