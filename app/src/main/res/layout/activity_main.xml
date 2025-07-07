@@ -92,7 +92,7 @@
         android:layout_marginTop="20dp"
         android:fontFamily="sans-serif-smallcaps"
         android:gravity="center"
-        android:text="ALLG编译，与原版保持一致。👑"
+        android:text="ALLG编译LITE养老版本，与原版保持一致（移除各种弹窗报错功能，不喜勿用，使用前请重置配置文件再使用，不然还是会弹窗~）。👑"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textColor="#FFD700"
