@@ -765,5 +765,3 @@ public static String queryTopEnergyChallengeRanking() {
         return RequestManager.requestString("alipay.antforest.forest.h5.queryTopEnergyChallengeRanking", args);
     }
 }
-
-
