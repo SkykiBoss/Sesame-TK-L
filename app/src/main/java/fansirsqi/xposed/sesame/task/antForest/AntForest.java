@@ -59,6 +59,7 @@ import fansirsqi.xposed.sesame.util.Notify;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.util.TimeUtil;
+import fansirsqi.xposed.sesame.util.StringUtil;
 import lombok.Getter;
 
 /**
@@ -236,6 +237,18 @@ public class AntForest extends ModelTask {
             this.displayName = displayName;
         }
     }
+    private String resolveFriendName(String userId) {
+    if (StringUtil.isEmpty(userId)) return userId;
+    String displayName = UserMap.getMaskName(userId);
+    if (!StringUtil.isEmpty(displayName)) {
+        return displayName;
+    }
+    return userId; // 兜底返回
+}
+    public static String queryTopEnergyChallengeRanking() {
+    String args = "[{\"source\":\"chInfo_ch_appcenter__chsub_9patch\"}]";
+    return RequestManager.requestString("alipay.antforest.forest.h5.queryTopEnergyChallengeRanking", args);
+}
 
     @Override
     public ModelFields getFields() {
