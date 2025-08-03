@@ -1157,8 +1157,9 @@ private void collectPkFriendEnergy() {
             Log.error(TAG, "获取PK排行榜失败: " + root.optString("resultDesc"));
             return;
         }
-        // 前20名一般包含自己，可直接统一收集
+        // 前20名一般包含自己，可直接统一收集（结构和普通好友类似）
         collectFriendsEnergy(root);
+
         JSONArray totalDatas = root.optJSONArray("totalData");
         if (totalDatas == null || totalDatas.length() == 0) {
             Log.forest(TAG, "PK排行榜 totalData 为空");
@@ -1169,18 +1170,20 @@ private void collectPkFriendEnergy() {
             JSONObject friend = totalDatas.getJSONObject(i);
             String userId = friend.optString("userId", "");
             if (userId.isEmpty() || Objects.equals(userId, selfId)) continue;
-            // 查询昵称
+
+            // 查询昵称，用于日志显示
             PkFriendInfo info = queryPkFriendInfo(userId);
             String display = info != null ? info.name + "（" + info.userId + "）" : "（" + userId + "，未查到昵称）";
             Log.forest(TAG, "前往PK好友主页视察工作 => " + display);
+
             idList.add(userId);
             if (idList.size() >= 20) {
-                processBatchFriends(idList);  // 这里只收集 userId，日志部分已经输出
+                processBatchPkFriends(idList);  // 使用PK好友专用批量处理接口
                 idList.clear();
             }
         }
         if (!idList.isEmpty()) {
-            processBatchFriends(idList);
+            processBatchPkFriends(idList);  // 处理剩余PK好友
         }
         Log.runtime(TAG, "收取 PK 好友能量完成！");
     } catch (JSONException e) {
@@ -1189,6 +1192,30 @@ private void collectPkFriendEnergy() {
         Log.printStackTrace(TAG, "queryTopEnergyChallengeRanking 异常", t);
     }
 }
+
+    // PK好友批量处理入口，参数是userId列表
+private void processBatchPkFriends(List<String> userIds) {
+    try {
+        // 用PK好友专用接口批量查询好友详情
+        String jsonStr = AntForestRpcCall.queryPkFriendBatchInfo(new JSONArray(userIds).toString());
+        JSONObject batchObj = new JSONObject(jsonStr);
+        JSONArray friendRanking = batchObj.optJSONObject("resData").optJSONArray("friendRanking");
+        if (friendRanking == null) {
+            Log.forest(TAG, "PK好友批量接口返回数据为空");
+            return;
+        }
+        for (int i = 0; i < friendRanking.length(); i++) {
+            JSONObject friendObj = friendRanking.getJSONObject(i);
+            processSingleFriend(friendObj);  // 复用普通好友收能量逻辑
+        }
+    } catch (JSONException e) {
+        Log.printStackTrace(TAG, "解析PK好友批量数据失败", e);
+    } catch (Exception e) {
+        Log.printStackTrace(TAG, "处理PK好友批量出错", e);
+    }
+}
+
+    
 
     private void collectFriendEnergy() {
         try {
@@ -1231,95 +1258,142 @@ private void collectPkFriendEnergy() {
         }
     }
 
-
-    /**
-     * 批量处理好友 - 收能量
-     *
-     * @param userIds 用户id列表
-     */
-    private void processBatchFriends(List<String> userIds) {
-        try {
-            // 获取好友列表带 robFlag 的数据
-            String jsonStr = AntForestRpcCall.fillUserRobFlag(new JSONArray(userIds).toString());
-            JSONObject batchObj = new JSONObject(jsonStr);
-            JSONArray friendList = batchObj.optJSONArray("friendRanking");
-            if (friendList == null) return;
-            for (int i = 0; i < friendList.length(); i++) {
-                JSONObject friendObj = friendList.getJSONObject(i);
-                processSingleFriend(friendObj);
-            }
-        } catch (JSONException e) {
-            Log.printStackTrace(TAG, "解析批量好友数据失败", e);
-        } catch (Exception e) {
-            Log.printStackTrace(TAG, "处理批量好友出错", e);
+ /**
+ * PK好友批量处理 - 收能量
+ *
+ * @param userIds PK好友用户ID列表
+ */
+private void processBatchPkFriends(List<String> userIds) {
+    try {
+        // 调用PK好友批量接口，返回结构中friendRanking数组在 resData 内
+        String jsonStr = AntForestRpcCall.queryPkFriendBatchInfo(new JSONArray(userIds).toString());
+        JSONObject batchObj = new JSONObject(jsonStr);
+        JSONObject resData = batchObj.optJSONObject("resData");
+        if (resData == null) {
+            Log.forest(TAG, "PK好友批量接口返回resData为空");
+            return;
         }
+        JSONArray friendRanking = resData.optJSONArray("friendRanking");
+        if (friendRanking == null) {
+            Log.forest(TAG, "PK好友批量接口返回friendRanking为空");
+            return;
+        }
+        for (int i = 0; i < friendRanking.length(); i++) {
+            JSONObject friendObj = friendRanking.getJSONObject(i);
+            processSingleFriend(friendObj); // 复用普通好友收能量逻辑，确保JSON字段兼容
+        }
+    } catch (JSONException e) {
+        Log.printStackTrace(TAG, "解析PK好友批量数据失败", e);
+    } catch (Exception e) {
+        Log.printStackTrace(TAG, "处理PK好友批量出错", e);
     }
+}
+    
+/**
+ * 处理单个好友 - 收能量（普通好友和PK好友共用）
+ *
+ * @param friendObj 好友的JSON对象
+ */
+private void processSingleFriend(JSONObject friendObj) {
+    try {
+        String userId = friendObj.getString("userId");
+        String userName = friendObj.optString("displayName", "未知好友"); // PK好友和普通好友都用displayName字段
+        if (Objects.equals(userId, selfId)) return;//如果是自己，则跳过
 
-    /**
-     * 处理单个好友 - 收能量
-     *
-     * @param friendObj 好友的JSON对象
-     */
-    private void processSingleFriend(JSONObject friendObj) {
-        try {
-            String userId = friendObj.getString("userId");
-            String userName = UserMap.getMaskName(userId);
-            if (Objects.equals(userId, selfId)) return;//如果是自己，则跳过
-            boolean needCollectEnergy = collectEnergy.getValue() && !dontCollectMap.contains(userId); //开启了收能量功能并且不在排除名单中
-            boolean needHelpProtect = helpFriendCollectType.getValue() != HelpFriendCollectType.NONE && friendObj.optBoolean("canProtectBubble") && Status.hasFlagToday("help_friend_collect_protect::" + selfId);
+        boolean needCollectEnergy = collectEnergy.getValue() && !dontCollectMap.contains(userId); //开启了收能量功能且不排除
+        boolean needHelpProtect = helpFriendCollectType.getValue() != HelpFriendCollectType.NONE
+                && friendObj.optBoolean("canProtectBubble")
+                && Status.hasFlagToday("help_friend_collect_protect::" + selfId);
 
-            boolean needCollectGiftBox = collectGiftBox.getValue() && friendObj.optBoolean("canCollectGiftBox");
-            if (!needCollectEnergy && !needHelpProtect && !needCollectGiftBox) {
-                return;
-            }
-            // 是否需要收集能量
-            boolean canCollect = false;
-            if (needCollectEnergy) {
-                if (friendObj.optBoolean("canCollectEnergy")) {
-                    long canCollectLaterTime = friendObj.getLong("canCollectLaterTime");
-                    if (canCollectLaterTime > 0 && canCollectLaterTime - System.currentTimeMillis() < checkIntervalInt) {//如果收取时间在执行时间范围内，则可以收取
-                        canCollect = true;
-                    }
+        boolean needCollectGiftBox = collectGiftBox.getValue() && friendObj.optBoolean("canCollectGiftBox");
+
+        if (!needCollectEnergy && !needHelpProtect && !needCollectGiftBox) {
+            return;
+        }
+
+        // 是否可以收能量
+        boolean canCollect = false;
+        if (needCollectEnergy) {
+            if (friendObj.optBoolean("canCollectEnergy")) {
+                long canCollectLaterTime = friendObj.optLong("canCollectLaterTime", -1);
+                if (canCollectLaterTime > 0 && canCollectLaterTime - System.currentTimeMillis() < checkIntervalInt) {
+                    canCollect = true;
                 }
             }
+        }
 
-            JSONObject userHomeObj = null;
-            // 开始执行收集能量
-            if (needCollectEnergy && canCollect) {
-                userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
+        JSONObject userHomeObj = null;
+        // 执行收集
+        if (needCollectEnergy && canCollect) {
+            userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
+            Log.forest(TAG, "已收取好友【" + userName + "】的能量");
+        }
+
+        // 保护好友能量气泡
+        if (needHelpProtect) {
+            boolean isProtected = helpFriendCollectList.getValue().contains(userId);
+            if (helpFriendCollectType.getValue() != HelpFriendCollectType.HELP) {
+                isProtected = !isProtected;
             }
-
-            if (needHelpProtect) {
-                boolean isProtected = helpFriendCollectList.getValue().contains(userId);
-                if (helpFriendCollectType.getValue() != HelpFriendCollectType.HELP) {
-                    isProtected = !isProtected;
-                }
-                if (isProtected) {
-                    if (userHomeObj == null) {
-                        userHomeObj = queryFriendHome(userId);
-                    }
-                    if (userHomeObj != null) {
-                        protectFriendEnergy(userHomeObj);
-                    }
-                }
-            }
-
-            // 尝试领取礼物盒
-            if (needCollectGiftBox) {
+            if (isProtected) {
                 if (userHomeObj == null) {
                     userHomeObj = queryFriendHome(userId);
                 }
                 if (userHomeObj != null) {
-                    collectGiftBox(userHomeObj);
+                    protectFriendEnergy(userHomeObj);
+                    Log.forest(TAG, "已保护好友【" + userName + "】的能量气泡");
                 }
             }
-
-        } catch (JSONException e) {
-            Log.printStackTrace(TAG, "处理单个好友[" + friendObj.optString("userId") + "]出错", e);
-        } catch (Exception e) {
-            Log.printStackTrace(TAG, "处理好友异常", e);
         }
+
+        // 收集礼物盒
+        if (needCollectGiftBox) {
+            if (userHomeObj == null) {
+                userHomeObj = queryFriendHome(userId);
+            }
+            if (userHomeObj != null) {
+                collectGiftBox(userHomeObj);
+                Log.forest(TAG, "已收取好友【" + userName + "】的礼物盒");
+            }
+        }
+    } catch (JSONException e) {
+        Log.printStackTrace(TAG, "处理好友[" + friendObj.optString("userId") + "]异常", e);
+    } catch (Exception e) {
+        Log.printStackTrace(TAG, "处理好友异常", e);
     }
+}
+
+    /**
+ * PK好友收能量入口
+ *
+ * @param friendsObject PK好友排行榜的JSON对象（接口返回的完整数据）
+ */
+private void collectPkFriendsEnergy(JSONObject friendsObject) {
+    try {
+        if (errorWait) return;
+
+        JSONObject resData = friendsObject.optJSONObject("resData");
+        if (resData == null) {
+            Log.forest(TAG, "无PK好友数据可处理");
+            return;
+        }
+
+        JSONArray friendRanking = resData.optJSONArray("friendRanking");
+        if (friendRanking == null) {
+            Log.forest(TAG, "PK好友列表为空");
+            return;
+        }
+
+        for (int i = 0; i < friendRanking.length(); i++) {
+            JSONObject friendObj = friendRanking.getJSONObject(i);
+            processSingleFriend(friendObj); // 处理单个PK好友，复用同一逻辑
+        }
+    } catch (JSONException e) {
+        Log.printStackTrace(TAG, "解析PK好友排行榜失败", e);
+    } catch (Exception e) {
+        Log.printStackTrace(TAG, "处理PK好友列表异常", e);
+    }
+}
 
     /**
      * 收取好友能量
