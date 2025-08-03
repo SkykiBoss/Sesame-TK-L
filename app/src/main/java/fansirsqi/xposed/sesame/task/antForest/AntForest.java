@@ -1166,7 +1166,7 @@ private void collectPkFriendEnergy() {
             return;
         }
         List<String> idList = new ArrayList<>();
-        for (int i = 20; i < totalDatas.length(); i++) {
+        for (int i = 30; i < totalDatas.length(); i++) {
             JSONObject friend = totalDatas.getJSONObject(i);
             String userId = friend.optString("userId", "");
             if (userId.isEmpty() || Objects.equals(userId, selfId)) continue;
@@ -1177,7 +1177,7 @@ private void collectPkFriendEnergy() {
             Log.forest(TAG, "前往PK好友主页视察工作 => " + display);
 
             idList.add(userId);
-            if (idList.size() >= 20) {
+            if (idList.size() >= 30) {
                 processBatchPkFriends(idList);  // 使用PK好友专用批量处理接口
                 idList.clear();
             }
@@ -1223,23 +1223,23 @@ private void processBatchPkFriends(List<String> userIds) {
                 return;
             }
 
-            // 处理排名靠前的好友（通常自己也在其中） 20个
+            // 处理排名靠前的好友（通常自己也在其中） 30个
             collectFriendsEnergy(friendsObject);
 
-            // 分批处理其他好友（从第20位开始）
+            // 分批处理其他好友（从第30位开始）
             JSONArray totalDatas = friendsObject.optJSONArray("totalDatas");
             if (totalDatas == null) return;
 
             List<String> idList = new ArrayList<>();
-            for (int pos = 20; pos < totalDatas.length(); pos++) {
+            for (int pos = 30; pos < totalDatas.length(); pos++) {
                 JSONObject friend = totalDatas.getJSONObject(pos);
                 String userId = friend.getString("userId");
 
                 if (Objects.equals(userId, selfId)) continue; //如果是自己则跳过
 
                 idList.add(userId);
-                if (idList.size() == 20) {
-                    processBatchFriends(idList);//20个id 一次处理
+                if (idList.size() == 30) {
+                    processBatchFriends(idList);//30个id 一次处理
                     idList.clear();
                 }
             }
