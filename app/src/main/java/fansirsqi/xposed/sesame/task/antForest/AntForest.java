@@ -1255,6 +1255,29 @@ private void processBatchPkFriends(List<String> userIds) {
             Log.printStackTrace(TAG, "queryEnergyRanking 异常", t);
         }
     }
+
+     /**
+     * 批量处理好友 - 收能量
+     *
+     * @param userIds 用户id列表
+     */
+    private void processBatchFriends(List<String> userIds) {
+        try {
+            // 获取好友列表带 robFlag 的数据
+            String jsonStr = AntForestRpcCall.fillUserRobFlag(new JSONArray(userIds).toString());
+            JSONObject batchObj = new JSONObject(jsonStr);
+            JSONArray friendList = batchObj.optJSONArray("friendRanking");
+            if (friendList == null) return;
+            for (int i = 0; i < friendList.length(); i++) {
+                JSONObject friendObj = friendList.getJSONObject(i);
+                processSingleFriend(friendObj);
+            }
+        } catch (JSONException e) {
+            Log.printStackTrace(TAG, "解析批量好友数据失败", e);
+        } catch (Exception e) {
+            Log.printStackTrace(TAG, "处理批量好友出错", e);
+        }
+    }
     
 /**
  * 处理单个好友 - 收能量（普通好友和PK好友共用）
