@@ -329,54 +329,98 @@ data object AntFarmFamily {
     try {
         val now = Calendar.getInstance()
         val hour = now.get(Calendar.HOUR_OF_DAY)
-        if (hour !in 6..9) return  // 6-9点才执行
 
-        if (groupId.isNullOrEmpty()) return
+        Log.record(TAG, "当前时间小时: $hour")
 
+        if (hour !in 6..9) {
+            Log.record(TAG, "当前非道早安时间段，退出")
+            return  // 6-9点才执行
+        }
+
+        if (groupId.isNullOrEmpty()) {
+            Log.record(TAG, "groupId 为空，无法发送早安")
+            return
+        }
+
+        Log.record(TAG, "原始家庭成员列表: $familyUserIds")
         familyUserIds.remove(UserMap.currentUid)
-        if (familyUserIds.isEmpty()) return
+        Log.record(TAG, "移除自己后的成员列表: $familyUserIds")
 
-        if (Status.hasFlagToday("antFarm::deliverMsgSend")) return
+        if (familyUserIds.isEmpty()) {
+            Log.record(TAG, "家庭成员为空，跳过发送")
+            return
+        }
+
+        if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
+            Log.record(TAG, "今天已发送过道早安，跳过")
+            return
+        }
 
         val userIds = JSONArray()
         familyUserIds.forEach { userIds.put(it) }
 
         val recommendResp = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
-        if (!ResChecker.checkRes(TAG, recommendResp)) return
+        Log.record(TAG, "recommendResp: $recommendResp")
+
+        if (!ResChecker.checkRes(TAG, recommendResp)) {
+            Log.record(TAG, "recommendResp 校验失败，跳过")
+            return
+        }
 
         val traceId = recommendResp.optString("ariverRpcTraceId")
-        if (traceId.isEmpty()) return
+        if (traceId.isEmpty()) {
+            Log.record(TAG, "traceId 为空，跳过")
+            return
+        }
 
         val contentResp = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, traceId))
-        if (!ResChecker.checkRes(TAG, contentResp)) return
+        Log.record(TAG, "contentResp: $contentResp")
+
+        if (!ResChecker.checkRes(TAG, contentResp)) {
+            Log.record(TAG, "contentResp 校验失败，跳过")
+            return
+        }
 
         val content = contentResp.optString("content")
         val deliverId = contentResp.optString("deliverId")
-        if (content.isEmpty() || deliverId.isEmpty()) return
+        Log.record(TAG, "道早安内容: $content, deliverId: $deliverId")
+
+        if (content.isEmpty() || deliverId.isEmpty()) {
+            Log.record(TAG, "道早安内容或 deliverId 为空，跳过")
+            return
+        }
 
         // 查询确认内容
         AntFarmRpcCall.QueryExpandContent(deliverId)
+        Log.record(TAG, "调用 QueryExpandContent 成功")
 
-        // 发送早安消息，注意这里不能用命名参数，参数顺序调用
         val sendResp = JSONObject(AntFarmRpcCall.deliverMsgSend(
             groupId!!,
             userIds,
             content,
             deliverId
         ))
-        if (!ResChecker.checkRes(TAG, sendResp)) return
+        Log.record(TAG, "sendResp: $sendResp")
+
+        if (!ResChecker.checkRes(TAG, sendResp)) {
+            Log.record(TAG, "sendResp 校验失败，跳过")
+            return
+        }
 
         Log.farm("家庭任务🏠道早安: $content 🌈")
         Status.setFlagToday("antFarm::deliverMsgSend")
 
-        // 同步亲密度，传JSONArray
         val syncUserIds = JSONArray()
-         familyUserIds.forEach { syncUserIds.put(it) }
-         AntFarmRpcCall.syncFamilyStatus(groupId!!, "INTIMACY_VALUE", syncUserIds)
+        familyUserIds.forEach { syncUserIds.put(it) }
+
+        Log.record(TAG, "同步亲密度成员: $syncUserIds")
+        AntFarmRpcCall.syncFamilyStatus(groupId!!, "INTIMACY_VALUE", syncUserIds)
+        Log.record(TAG, "同步亲密度完成")
     } catch (t: Throwable) {
         Log.printStackTrace(TAG, "deliverMsgSend err:", t)
     }
 }
+
 
 
     /**
