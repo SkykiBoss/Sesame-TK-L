@@ -1215,8 +1215,6 @@ private void processBatchPkFriends(List<String> userIds) {
     }
 }
 
-    
-
     private void collectFriendEnergy() {
         try {
             JSONObject friendsObject = new JSONObject(AntForestRpcCall.queryEnergyRanking());
@@ -1257,37 +1255,6 @@ private void processBatchPkFriends(List<String> userIds) {
             Log.printStackTrace(TAG, "queryEnergyRanking 异常", t);
         }
     }
-
- /**
- * PK好友批量处理 - 收能量
- *
- * @param userIds PK好友用户ID列表
- */
-private void processBatchPkFriends(List<String> userIds) {
-    try {
-        // 调用PK好友批量接口，返回结构中friendRanking数组在 resData 内
-        String jsonStr = AntForestRpcCall.queryPkFriendBatchInfo(new JSONArray(userIds).toString());
-        JSONObject batchObj = new JSONObject(jsonStr);
-        JSONObject resData = batchObj.optJSONObject("resData");
-        if (resData == null) {
-            Log.forest(TAG, "PK好友批量接口返回resData为空");
-            return;
-        }
-        JSONArray friendRanking = resData.optJSONArray("friendRanking");
-        if (friendRanking == null) {
-            Log.forest(TAG, "PK好友批量接口返回friendRanking为空");
-            return;
-        }
-        for (int i = 0; i < friendRanking.length(); i++) {
-            JSONObject friendObj = friendRanking.getJSONObject(i);
-            processSingleFriend(friendObj); // 复用普通好友收能量逻辑，确保JSON字段兼容
-        }
-    } catch (JSONException e) {
-        Log.printStackTrace(TAG, "解析PK好友批量数据失败", e);
-    } catch (Exception e) {
-        Log.printStackTrace(TAG, "处理PK好友批量出错", e);
-    }
-}
     
 /**
  * 处理单个好友 - 收能量（普通好友和PK好友共用）
