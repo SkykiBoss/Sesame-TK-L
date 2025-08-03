@@ -225,19 +225,30 @@ public class AntForest extends ModelTask {
         int DONT_HELP = 2;
         String[] nickNames = {"关闭", "选中复活", "选中不复活"};
     }
-    
+
+    //pk
     public static PkFriendInfo queryPkFriendInfo(String uid) {
     try {
         String resp = AntForestRpcCall.queryFriendHomePage(uid);
+        Log.record("PkFriend", "queryFriendHomePage response: " + resp);
+
         JSONObject root = new JSONObject(resp);
         JSONObject data = root.optJSONObject("Data");
-        if (data == null) return null;
+        if (data == null) {
+            Log.record("PkFriend", "Data字段为空");
+            return null;
+        }
 
         JSONObject userBase = data.optJSONObject("userBaseInfo");
-        if (userBase == null) return null;
+        if (userBase == null) {
+            Log.record("PkFriend", "userBaseInfo字段为空");
+            return null;
+        }
 
         String userId = userBase.optString("userId");
         String name = userBase.optString("displayName", "未知");
+
+        Log.record("PkFriend", "解析到的userId=" + userId + ", displayName=" + name);
 
         return new PkFriendInfo(userId, name);
     } catch (Throwable t) {
@@ -245,6 +256,7 @@ public class AntForest extends ModelTask {
         return null;
     }
 }
+    //pk
     public static class PkFriendInfo {
     public String userId;
     public String name;
@@ -254,8 +266,6 @@ public class AntForest extends ModelTask {
         this.name = name;
     }
 }
-
-
 
     @Override
     public ModelFields getFields() {
