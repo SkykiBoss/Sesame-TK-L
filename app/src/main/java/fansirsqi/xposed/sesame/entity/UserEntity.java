@@ -1,6 +1,8 @@
 package fansirsqi.xposed.sesame.entity;
 
 import fansirsqi.xposed.sesame.util.StringUtil;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.Data;
 import lombok.Getter;
 
