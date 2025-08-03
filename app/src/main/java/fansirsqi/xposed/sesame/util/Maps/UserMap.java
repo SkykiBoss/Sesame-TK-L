@@ -194,8 +194,8 @@ public class UserMap {
     if (userEntity.getUserId() != null && !userEntity.getUserId().isEmpty()) {
         userMap.put(userEntity.getUserId(), userEntity);
     }
-    if (userEntity.getDisplayName() != null && !userEntity.getDisplayName().isEmpty()) {
-        pkFriendMap.put(userEntity.getDisplayName(), userEntity);
+    if (userEntity.getShowName() != null && !userEntity.getShowName().isEmpty()) {
+        pkFriendMap.put(userEntity.getShowName(), userEntity);
     }
 }
     /**
@@ -205,8 +205,8 @@ public class UserMap {
      */
     public static synchronized void remove(String userIdOrDisplayName) {
     UserEntity removed = userMap.remove(userIdOrDisplayName);
-    if (removed != null && removed.getDisplayName() != null) {
-        pkFriendMap.remove(removed.getDisplayName());
+    if (removed != null && removed.getShowName() != null) {
+        pkFriendMap.remove(removed.getShowName());
     } else {
         pkFriendMap.remove(userIdOrDisplayName);
     }
