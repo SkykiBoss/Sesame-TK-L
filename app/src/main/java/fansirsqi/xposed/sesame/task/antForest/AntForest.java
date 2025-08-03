@@ -909,85 +909,90 @@ public class AntForest extends ModelTask {
 
 
     /**
-     * 收取用户的蚂蚁森林能量。
-     *
-     * @param userId      用户ID
-     * @param userHomeObj 用户主页的JSON对象，包含用户的蚂蚁森林信息
-     * @return 更新后的用户主页JSON对象，如果发生异常返回null
-     */
-    private JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
-        try {
-            // 1. 检查接口返回是否成功
-            if (!ResChecker.checkRes(TAG, userHomeObj)) {
-                Log.debug(TAG, "载入失败: " + userHomeObj.getString("resultDesc"));
-                return userHomeObj;
+ * 收取用户的蚂蚁森林能量。
+ *
+ * @param userId      用户ID
+ * @param userHomeObj 用户主页的JSON对象，包含用户的蚂蚁森林信息
+ * @return 更新后的用户主页JSON对象，如果发生异常返回null
+ */
+private JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
+    try {
+        // 1. 检查接口返回是否成功
+        if (!ResChecker.checkRes(TAG, userHomeObj)) {
+            Log.debug(TAG, "载入失败: " + userHomeObj.optString("resultDesc"));
+            return userHomeObj;
+        }
+
+        long serverTime = userHomeObj.optLong("now", System.currentTimeMillis());
+        boolean isSelf = Objects.equals(userId, selfId);
+        String userName = UserMap.getMaskName(userId);
+
+        // 2. 跳过已收取
+        if (cacheCollectedList.contains(userId)) {
+            Log.runtime(TAG, userName + "已缓存，跳过");
+            return userHomeObj;
+        }
+
+        Log.record(TAG, "进入[" + userName + "]的蚂蚁森林");
+
+        // 3. 判断是否允许收取
+        if (!collectEnergy.getValue() || dontCollectMap.contains(userId)) {
+            return userHomeObj;
+        }
+
+        // 4. 检查是否有道具保护（根据类型分流处理）
+        if (!isSelf) {
+            Log.record(TAG, "进入道具判断逻辑");
+            Log.record(TAG, "当前 selfId = " + selfId);
+            Log.record(TAG, "对方 userId = " + userId);
+            Log.record(TAG, "是否是自己: isSelf = " + isSelf);
+
+            boolean isProtected = false;
+
+            if (isPkUser(userHomeObj)) {
+                // PK 好友判断逻辑
+                isProtected = isPkFriendProtected(userHomeObj, serverTime, selfId);
+            } else {
+                // 普通好友判断逻辑
+                boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
+                boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
+                Log.record(TAG, "炸弹卡判断结果 = " + bombed);
+                Log.record(TAG, "能量罩判断结果 = " + shielded);
+
+                if (shielded) Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
+                if (bombed) Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
+
+                isProtected = shielded || bombed;
             }
 
-
-            long serverTime = userHomeObj.getLong("now");
-            boolean isSelf = Objects.equals(userId, selfId);
-            String userName = UserMap.getMaskName(userId);
-
-            if (cacheCollectedList.contains(userId)) {
-                Log.runtime(TAG, userName + "已缓存，跳过");
-                return userHomeObj;
-            } //该次已缓存，标记为已收取
-
-            Log.record(TAG, "进入[" + userName + "]的蚂蚁森林");
-
-            // 3. 判断是否允许收取能量
-            if (!collectEnergy.getValue() || dontCollectMap.contains(userId)) {
+            if (isProtected) {
                 return userHomeObj;
             }
-
-            // 4. 检查是否有道具保护
-            if (!isSelf) {
-            // 插入调试日志
-            String targetId = userHomeObj.optString("userId");
-             Log.record(TAG, "进入道具判断逻辑");
-             Log.record(TAG, "当前 selfId = " + selfId);
-             Log.record(TAG, "对方 userId = " + targetId);
-             Log.record(TAG, "是否是自己: isSelf = " + isSelf);
-             boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
-             boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
-             Log.record(TAG, "炸弹卡判断结果 = " + bombed);
-             Log.record(TAG, "能量罩判断结果 = " + shielded);
-
-    if (shielded || bombed) {
-        if (shielded) {
-            Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
         }
-        if (bombed) {
-            Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
-        }
+
+        // 5. 获取所有可收集的能量球
+        List<Long> availableBubbles = new ArrayList<>();
+        List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
+        extractBubbleInfo(userHomeObj, serverTime, availableBubbles, waitingBubbles, userId);
+
+        // 6. 添加蹲点任务（等待成熟）
+        scheduleWaitingBubbles(userId, waitingBubbles);
+
+        // 7. 收集可直接收取的能量
+        collectAvailableEnergy(userId, userHomeObj, availableBubbles);
+
+        cacheCollectedList.add(userId);
+
         return userHomeObj;
+
+    } catch (JSONException | NullPointerException e) {
+        Log.printStackTrace(TAG, "collectUserEnergy JSON解析错误", e);
+        return null;
+    } catch (Throwable t) {
+        Log.printStackTrace(TAG, "collectUserEnergy 出现异常", t);
+        return null;
     }
 }
-            
-            // 5. 获取所有可收集的能量球
-            List<Long> availableBubbles = new ArrayList<>();
-            List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
-
-            extractBubbleInfo(userHomeObj, serverTime, availableBubbles, waitingBubbles, userId);
-
-            // 6. 添加蹲点任务（等待成熟）
-            scheduleWaitingBubbles(userId, waitingBubbles);
-
-            // 7. 收集可直接收取的能量
-            collectAvailableEnergy(userId, userHomeObj, availableBubbles);
-
-            cacheCollectedList.add(userId);
-
-            return userHomeObj;
-
-        } catch (JSONException | NullPointerException e) {
-            Log.printStackTrace(TAG, "collectUserEnergy JSON解析错误", e);
-            return null;
-        } catch (Throwable t) {
-            Log.printStackTrace(TAG, "collectUserEnergy 出现异常", t);
-            return null;
-        }
-    }
 
 
     /**
