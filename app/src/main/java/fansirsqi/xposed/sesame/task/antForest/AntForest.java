@@ -271,6 +271,14 @@ public static PkFriendInfo queryPkFriendInfo(String uid) {
     }
 }
 
+     //pk
+    public static void ensureUser(String userId, String displayName) {
+    if (!map.containsKey(userId)) {
+        UserEntity entity = new UserEntity(userId, displayName);
+        put(userId, entity);
+    }
+}
+
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
@@ -1149,40 +1157,62 @@ public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
         }
     }
     
-//添加pk排行榜
+// 添加pk排行榜能量收集
 private void collectPkFriendEnergy() {
     try {
         JSONObject root = new JSONObject(AntForestRpcCall.queryTopEnergyChallengeRanking());
+
         if (!ResChecker.checkRes(TAG, root)) {
             Log.error(TAG, "获取PK排行榜失败: " + root.optString("resultDesc"));
             return;
         }
+
         // 前20名一般包含自己，可直接统一收集
         collectFriendsEnergy(root);
+
         JSONArray totalDatas = root.optJSONArray("totalData");
         if (totalDatas == null || totalDatas.length() == 0) {
             Log.forest(TAG, "PK排行榜 totalData 为空");
             return;
         }
+
         List<String> idList = new ArrayList<>();
+
+        // 从第21名开始遍历，避免重复收集前20名的能量
         for (int i = 20; i < totalDatas.length(); i++) {
             JSONObject friend = totalDatas.getJSONObject(i);
             String userId = friend.optString("userId", "");
-            if (userId.isEmpty() || Objects.equals(userId, selfId)) continue;
-            // 查询昵称
+            if (userId.isEmpty() || Objects.equals(userId, selfId)) {
+                continue; // 跳过空ID或自己
+            }
+
+            // 查询PK好友信息，获取昵称
             PkFriendInfo info = queryPkFriendInfo(userId);
+
+            // 加入UserMap，确保用户信息映射完整
+            if (info != null) {
+                UserMap.ensureUser(info.userId, info.name);
+            }
+
             String display = info != null ? info.name + "（" + info.userId + "）" : "（" + userId + "，未查到昵称）";
             Log.forest(TAG, "前往PK好友主页视察工作 => " + display);
+
             idList.add(userId);
+
+            // 批量处理，避免单次请求过多
             if (idList.size() >= 20) {
-                processBatchFriends(idList);  // 这里只收集 userId，日志部分已经输出
+                processBatchFriends(idList);
                 idList.clear();
             }
         }
+
+        // 处理剩余不足20人的批次
         if (!idList.isEmpty()) {
             processBatchFriends(idList);
         }
+
         Log.runtime(TAG, "收取 PK 好友能量完成！");
+
     } catch (JSONException e) {
         Log.printStackTrace(TAG, "解析 PK 好友排行榜 JSON 异常", e);
     } catch (Throwable t) {
