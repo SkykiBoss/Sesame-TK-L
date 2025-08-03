@@ -915,144 +915,143 @@ public class AntForest extends ModelTask {
  * @param userHomeObj 用户主页的JSON对象，包含用户的蚂蚁森林信息
  * @return 更新后的用户主页JSON对象，如果发生异常返回null
  */
-private JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
-    try {
-        // 1. 检查接口返回是否成功
-        if (!ResChecker.checkRes(TAG, userHomeObj)) {
-            Log.debug(TAG, "载入失败: " + userHomeObj.optString("resultDesc"));
-            return userHomeObj;
-        }
-
-        long serverTime = userHomeObj.optLong("now", System.currentTimeMillis());
-        boolean isSelf = Objects.equals(userId, selfId);
-        String userName = UserMap.getMaskName(userId);
-
-        // 2. 跳过已收取
-        if (cacheCollectedList.contains(userId)) {
-            Log.runtime(TAG, userName + "已缓存，跳过");
-            return userHomeObj;
-        }
-
-        Log.record(TAG, "进入[" + userName + "]的蚂蚁森林");
-
-        // 3. 判断是否允许收取
-        if (!collectEnergy.getValue() || dontCollectMap.contains(userId)) {
-            return userHomeObj;
-        }
-
-        // 4. 检查是否有道具保护（根据类型分流处理）
-        if (!isSelf) {
-            Log.record(TAG, "进入道具判断逻辑");
-            Log.record(TAG, "当前 selfId = " + selfId);
-            Log.record(TAG, "对方 userId = " + userId);
-            Log.record(TAG, "是否是自己: isSelf = " + isSelf);
-
-            boolean isProtected = false;
-
-            if (isPkUser(userHomeObj)) {
-                // PK 好友判断逻辑
-                isProtected = isPkFriendProtected(userHomeObj, serverTime, selfId);
-            } else {
-                // 普通好友判断逻辑
-                boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
-                boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
-                Log.record(TAG, "炸弹卡判断结果 = " + bombed);
-                Log.record(TAG, "能量罩判断结果 = " + shielded);
-
-                if (shielded) Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
-                if (bombed) Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
-
-                isProtected = shielded || bombed;
-            }
-
-            if (isProtected) {
+public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
+        try {
+            if (!ResChecker.checkRes(TAG, userHomeObj)) {
+                Log.debug(TAG, "载入失败: " + userHomeObj.optString("resultDesc"));
                 return userHomeObj;
             }
+
+            long serverTime = userHomeObj.optLong("now", System.currentTimeMillis());
+            boolean isSelf = Objects.equals(userId, selfId);
+            String userName = UserMap.getMaskName(userId);
+
+            if (cacheCollectedList.contains(userId)) {
+                Log.runtime(TAG, userName + "已缓存，跳过");
+                return userHomeObj;
+            }
+
+            Log.record(TAG, "进入[" + userName + "]的蚂蚁森林");
+
+            if (!collectEnergy.getValue() || dontCollectMap.contains(userId)) {
+                return userHomeObj;
+            }
+
+            if (!isSelf) {
+                Log.record(TAG, "进入道具判断逻辑");
+                Log.record(TAG, "当前 selfId = " + selfId);
+                Log.record(TAG, "对方 userId = " + userId);
+                Log.record(TAG, "是否是自己: isSelf = " + isSelf);
+
+                boolean isProtected = false;
+                if (isPkUser(userHomeObj)) {
+                    // PK好友保护判断
+                    isProtected = isPkFriendProtected(userHomeObj, serverTime, selfId);
+                } else {
+                    // 普通好友保护判断
+                    boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
+                    boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
+
+                    Log.record(TAG, "炸弹卡判断结果 = " + bombed);
+                    Log.record(TAG, "能量罩判断结果 = " + shielded);
+
+                    if (shielded) Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
+                    if (bombed) Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
+
+                    isProtected = shielded || bombed;
+                }
+
+                if (isProtected) {
+                    return userHomeObj;
+                }
+            }
+
+            List<Long> availableBubbles = new ArrayList<>();
+            List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
+
+            extractBubbleInfo(userHomeObj, serverTime, availableBubbles, waitingBubbles, userId);
+            scheduleWaitingBubbles(userId, waitingBubbles);
+            collectAvailableEnergy(userId, userHomeObj, availableBubbles);
+
+            cacheCollectedList.add(userId);
+
+            return userHomeObj;
+
+        } catch (JSONException | NullPointerException e) {
+            Log.printStackTrace(TAG, "collectUserEnergy JSON解析错误", e);
+            return null;
+        } catch (Throwable t) {
+            Log.printStackTrace(TAG, "collectUserEnergy 出现异常", t);
+            return null;
         }
-
-        // 5. 获取所有可收集的能量球
-        List<Long> availableBubbles = new ArrayList<>();
-        List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
-        extractBubbleInfo(userHomeObj, serverTime, availableBubbles, waitingBubbles, userId);
-
-        // 6. 添加蹲点任务（等待成熟）
-        scheduleWaitingBubbles(userId, waitingBubbles);
-
-        // 7. 收集可直接收取的能量
-        collectAvailableEnergy(userId, userHomeObj, availableBubbles);
-
-        cacheCollectedList.add(userId);
-
-        return userHomeObj;
-
-    } catch (JSONException | NullPointerException e) {
-        Log.printStackTrace(TAG, "collectUserEnergy JSON解析错误", e);
-        return null;
-    } catch (Throwable t) {
-        Log.printStackTrace(TAG, "collectUserEnergy 出现异常", t);
-        return null;
     }
-}
-
 
     /**
-     * 检查是否有能量罩保护
-     *
-     * @param userHomeObj 用户主页的JSON对象
-     * @param serverTime  服务器时间
-     * @return true 有能量罩保护，false 无能量罩保护
-     * @throws JSONException JSON解析异常
+     * 判断是否为PK好友
      */
-    private boolean hasEnergyShieldProtection(JSONObject userHomeObj, long serverTime) throws JSONException {
-        JSONArray props = userHomeObj.optJSONArray("usingUserProps");
+    private boolean isPkUser(JSONObject userHomeObj) {
+        return userHomeObj.has("rank") || userHomeObj.has("ranking") || userHomeObj.optBoolean("topUser", false);
+    }
+
+    /**
+     * PK好友保护判断（能量炸弹卡）
+     */
+    private boolean isPkFriendProtected(JSONObject userHomeObj, long serverTime, String selfId) {
+        return hasEnergyBombProtection(userHomeObj, serverTime, selfId);
+    }
+
+    /**
+     * 判断用户道具中是否包含有效的保护道具
+     */
+    private boolean hasPropProtection(JSONArray props, long serverTime, String targetProp, String propTypeKey, String selfId) {
         if (props == null) return false;
 
         for (int i = 0; i < props.length(); i++) {
-            JSONObject prop = props.getJSONObject(i);
-            if ("energyShield".equals(prop.optString("type")) && prop.getLong("endTime") > serverTime) {
-                return true;
+            JSONObject prop = props.optJSONObject(i);
+            if (prop == null) continue;
+
+            if (!targetProp.equals(prop.optString(propTypeKey))) continue;
+
+            long endTime = prop.optLong("endTime", 0);
+            if (endTime <= serverTime) continue;
+
+            if ("ENERGY_BOMB_CARD".equals(targetProp)) {
+                try {
+                    JSONObject extInfo = new JSONObject(prop.optString("extInfo", ""));
+                    JSONArray explodedIds = extInfo.optJSONArray("explodeFriendIds");
+                    if (explodedIds != null) {
+                        for (int j = 0; j < explodedIds.length(); j++) {
+                            if (selfId != null && selfId.equals(explodedIds.optString(j))) {
+                                return true;
+                            }
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.debug(TAG, "炸弹卡 extInfo 解析失败: " + e.getMessage());
+                }
+                return false;
             }
+            return true;
         }
         return false;
     }
-    
+
     /**
- * 检查用户是否启用了能量炸弹卡（自己是否会被炸），并记录被炸日志
- *
- * @param userHomeObj 用户主页的JSON对象
- * @param serverTime 当前服务器时间
- * @param selfId 自己的userId
- * @return true 表示该用户对你启用了炸弹卡，false 表示没有
- */
-private boolean hasEnergyBombProtection(JSONObject userHomeObj, long serverTime, String selfId) {
-    JSONArray props = userHomeObj.optJSONArray("usingUserPropsNew");
-    if (props == null) return false;
-
-    for (int i = 0; i < props.length(); i++) {
-        JSONObject prop = props.optJSONObject(i);
-        if (prop == null) continue;
-
-        if ("ENERGY_BOMB_CARD".equals(prop.optString("propType")) &&
-            prop.optLong("endTime", 0) > serverTime) {
-
-            try {
-                JSONObject extInfo = new JSONObject(prop.optString("extInfo", ""));
-                JSONArray explodedIds = extInfo.optJSONArray("explodeFriendIds");
-
-                if (explodedIds != null) {
-                    for (int j = 0; j < explodedIds.length(); j++) {
-                        if (selfId.equals(explodedIds.optString(j))) {
-                            return true;
-                        }
-                    }
-                }
-            } catch (JSONException e) {
-                Log.debug(TAG, "炸弹卡 extInfo 解析失败: " + e.getMessage());
-            }
-        }
+     * 普通好友能量罩保护判断
+     */
+    private boolean hasEnergyShieldProtection(JSONObject userHomeObj, long serverTime) {
+        JSONArray props = userHomeObj.optJSONArray("usingUserProps");
+        return hasPropProtection(props, serverTime, "energyShield", "type", null);
     }
-    return false;
-}
+
+    /**
+     * PK好友能量炸弹卡保护判断
+     */
+    private boolean hasEnergyBombProtection(JSONObject userHomeObj, long serverTime, String selfId) {
+        JSONArray props = userHomeObj.optJSONArray("usingUserPropsNew");
+        return hasPropProtection(props, serverTime, "ENERGY_BOMB_CARD", "propType", selfId);
+    }
+
 
     /**
      * 提取能量球状态
