@@ -236,39 +236,43 @@ public class AntForest extends ModelTask {
 
         JSONObject userBase = null;
 
-        // 先尝试 Data.userBaseInfo
+        // 1. Data.userBaseInfo
         JSONObject data = root.optJSONObject("Data");
         if (data != null) {
             userBase = data.optJSONObject("userBaseInfo");
-            if (userBase == null) {
-                Log.record("PkFriend", "Data.userBaseInfo字段为空");
+            if (userBase != null) {
+                Log.record("PkFriend", "从 Data.userBaseInfo 获取到");
+            } else {
+                Log.record("PkFriend", "Data.userBaseInfo 字段为空");
             }
         } else {
-            Log.record("PkFriend", "Data字段为空");
+            Log.record("PkFriend", "Data 字段为空");
         }
 
-        // 如果 Data.userBaseInfo 为空，再尝试 treeEnergy.userBaseInfo
+        // 2. treeEnergy.userBaseInfo
         if (userBase == null) {
             JSONObject treeEnergy = root.optJSONObject("treeEnergy");
             if (treeEnergy != null) {
                 userBase = treeEnergy.optJSONObject("userBaseInfo");
-                if (userBase == null) {
-                    Log.record("PkFriend", "treeEnergy.userBaseInfo字段为空");
+                if (userBase != null) {
+                    Log.record("PkFriend", "从 treeEnergy.userBaseInfo 获取到");
+                } else {
+                    Log.record("PkFriend", "treeEnergy.userBaseInfo 字段为空");
                 }
             } else {
-                Log.record("PkFriend", "treeEnergy字段为空");
+                Log.record("PkFriend", "treeEnergy 字段为空");
             }
         }
 
         if (userBase == null) {
-            Log.record("PkFriend", "无法找到userBaseInfo字段，返回null");
+            Log.record("PkFriend", "无法获取 userBaseInfo，返回 null");
             return null;
         }
 
         String userId = userBase.optString("userId", uid);
         String name = userBase.optString("displayName", "未知");
 
-        Log.record("PkFriend", "解析到的userId=" + userId + ", displayName=" + name);
+        Log.record("PkFriend", "解析结果 => userId = " + userId + ", displayName = " + name);
 
         return new PkFriendInfo(userId, name);
     } catch (Throwable t) {
