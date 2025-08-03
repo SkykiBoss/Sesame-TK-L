@@ -227,24 +227,39 @@ public class AntForest extends ModelTask {
     }
 
     //pk
-    public static PkFriendInfo queryPkFriendInfo(String uid) {
+    // PK 好友信息查询
+public static PkFriendInfo queryPkFriendInfo(String uid) {
     try {
         String resp = AntForestRpcCall.queryFriendHomePage(uid);
         Log.record("PkFriend", "queryFriendHomePage response: " + resp);
 
         JSONObject root = new JSONObject(resp);
 
-        // 注意：没有 Data，直接取
-        JSONObject userBase = root.optJSONObject("userBaseInfo");
-        if (userBase == null) {
-            Log.record("PkFriend", "userBaseInfo 字段为空，返回 null");
+        if (!"SUCCESS".equalsIgnoreCase(root.optString("resultCode"))) {
+            Log.record("PkFriend", "接口返回非 SUCCESS，终止解析");
             return null;
         }
 
-        String userId = userBase.optString("userId", uid);
-        String name = userBase.optString("displayName", "未知");
+        // 优先 userBaseInfo，其次主结构字段（部分接口版本可能没有 userBaseInfo）
+        String userId = uid;
+        String name = null;
 
-        Log.record("PkFriend", "解析结果 => userId = " + userId + ", displayName = " + name);
+        JSONObject userBase = root.optJSONObject("userBaseInfo");
+        if (userBase != null) {
+            userId = userBase.optString("userId", uid);
+            name = userBase.optString("displayName", null);
+        }
+
+        // 有些接口直接在根结构里返回 displayName
+        if (name == null) {
+            name = root.optString("displayName", null);
+        }
+
+        if (name == null) {
+            name = root.optString("name", "未知"); // 最后一层兜底
+        }
+
+        Log.record("PkFriend", "解析结果 => userId = " + userId + ", name = " + name);
         return new PkFriendInfo(userId, name);
 
     } catch (Throwable t) {
@@ -252,6 +267,7 @@ public class AntForest extends ModelTask {
         return null;
     }
 }
+
 
     //pk
     public static class PkFriendInfo {
