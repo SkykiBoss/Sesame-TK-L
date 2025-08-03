@@ -233,19 +233,39 @@ public class AntForest extends ModelTask {
         Log.record("PkFriend", "queryFriendHomePage response: " + resp);
 
         JSONObject root = new JSONObject(resp);
+
+        JSONObject userBase = null;
+
+        // 先尝试 Data.userBaseInfo
         JSONObject data = root.optJSONObject("Data");
-        if (data == null) {
+        if (data != null) {
+            userBase = data.optJSONObject("userBaseInfo");
+            if (userBase == null) {
+                Log.record("PkFriend", "Data.userBaseInfo字段为空");
+            }
+        } else {
             Log.record("PkFriend", "Data字段为空");
-            return null;
         }
 
-        JSONObject userBase = data.optJSONObject("userBaseInfo");
+        // 如果 Data.userBaseInfo 为空，再尝试 treeEnergy.userBaseInfo
         if (userBase == null) {
-            Log.record("PkFriend", "userBaseInfo字段为空");
+            JSONObject treeEnergy = root.optJSONObject("treeEnergy");
+            if (treeEnergy != null) {
+                userBase = treeEnergy.optJSONObject("userBaseInfo");
+                if (userBase == null) {
+                    Log.record("PkFriend", "treeEnergy.userBaseInfo字段为空");
+                }
+            } else {
+                Log.record("PkFriend", "treeEnergy字段为空");
+            }
+        }
+
+        if (userBase == null) {
+            Log.record("PkFriend", "无法找到userBaseInfo字段，返回null");
             return null;
         }
 
-        String userId = userBase.optString("userId");
+        String userId = userBase.optString("userId", uid);
         String name = userBase.optString("displayName", "未知");
 
         Log.record("PkFriend", "解析到的userId=" + userId + ", displayName=" + name);
@@ -256,6 +276,7 @@ public class AntForest extends ModelTask {
         return null;
     }
 }
+
     //pk
     public static class PkFriendInfo {
     public String userId;
