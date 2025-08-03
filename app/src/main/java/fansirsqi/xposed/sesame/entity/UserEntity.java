@@ -98,4 +98,43 @@ public class UserEntity {
             return new UserEntity(userId, account, friendStatus, realName, nickName, remarkName);
         }
     }
+    
+    public class UserMap {
+    // 假设这是你的用户缓存Map，key是userId，value是UserEntity
+    private static final Map<String, UserEntity> userMap = new ConcurrentHashMap<>();
+
+    public static Map<String, UserEntity> getUserMap() {
+        return userMap;
+    }
+
+    /**
+     * 确保用户存在，如果不存在则创建一个最简版UserEntity添加进去
+     * @param userId 用户ID
+     * @param displayName 用于账号和昵称等显示的名字
+     */
+    public static synchronized void ensureUser(String userId, String displayName) {
+        if (userId == null || userId.isEmpty()) return;
+
+        if (!userMap.containsKey(userId)) {
+            // 这里用displayName填充多个字段，保证至少有显示名
+            UserEntity entity = new UserEntity(
+                userId,
+                displayName,    // 账号
+                null,           // friendStatus未知时填null
+                displayName,    // 真实姓名
+                displayName,    // 昵称
+                null            // 备注名
+            );
+            userMap.put(userId, entity);
+        }
+    }
+
+    public static void add(UserEntity entity) {
+        if (entity != null && entity.userId != null && !entity.userId.isEmpty()) {
+            userMap.put(entity.userId, entity);
+        }
+    }
+    // 你还可以加其它方法，比如getCurrentUid()、remove()、load()、save()等
+}
+
 }
