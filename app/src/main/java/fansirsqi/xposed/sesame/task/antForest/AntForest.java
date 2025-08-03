@@ -1151,22 +1151,18 @@ private void collectPkFriendEnergy() {
             Log.error(TAG, "获取PK排行榜失败: " + root.optString("resultDesc"));
             return;
         }
-
         // 前20名一般包含自己，可直接统一收集
         collectFriendsEnergy(root);
-
         JSONArray totalDatas = root.optJSONArray("totalData");
         if (totalDatas == null || totalDatas.length() == 0) {
-            Log.warn(TAG, "PK排行榜 totalData 为空");
+            Log.forest(TAG, "PK排行榜 totalData 为空");
             return;
         }
-
         List<String> idList = new ArrayList<>();
         for (int i = 20; i < totalDatas.length(); i++) {
             JSONObject friend = totalDatas.getJSONObject(i);
             String userId = friend.optString("userId", "");
-            if (StringUtil.isEmpty(userId) || Objects.equals(userId, selfId)) continue;
-
+            if (userId.isEmpty() || Objects.equals(userId, selfId)) continue;
             // 查询昵称（queryFriendHomePage）
             PkFriendInfo info = queryPkFriendInfo(userId);
             if (info != null) {
@@ -1174,18 +1170,15 @@ private void collectPkFriendEnergy() {
             } else {
                 Log.forest("准备收取 PK 好友能量 => " + userId + "（未查到昵称）");
             }
-
             idList.add(userId);
             if (idList.size() >= 20) {
                 processBatchFriends(idList);
                 idList.clear();
             }
         }
-
         if (!idList.isEmpty()) {
             processBatchFriends(idList);
         }
-
         Log.runtime(TAG, "收取 PK 好友能量完成！");
     } catch (JSONException e) {
         Log.printStackTrace(TAG, "解析 PK 好友排行榜 JSON 异常", e);
