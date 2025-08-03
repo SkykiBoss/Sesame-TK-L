@@ -911,18 +911,27 @@ public class AntForest extends ModelTask {
 
             // 4. 检查是否有道具保护
             if (!isSelf) {
-                boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
-                boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
-                if (shielded || bombed) {
-                if (shielded) {
-                Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
-                }
-               if (bombed) {
-               Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
-              }
-              return userHomeObj;
-             }
-            }
+            // 插入调试日志
+            String targetId = userHomeObj.optString("userId");
+             Log.record(TAG, "进入道具判断逻辑");
+             Log.record(TAG, "当前 selfId = " + selfId);
+             Log.record(TAG, "对方 userId = " + targetId);
+             Log.record(TAG, "是否是自己: isSelf = " + isSelf);
+             boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
+             boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
+             Log.record(TAG, "炸弹卡判断结果 = " + bombed);
+             Log.record(TAG, "能量罩判断结果 = " + shielded);
+
+    if (shielded || bombed) {
+        if (shielded) {
+            Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
+        }
+        if (bombed) {
+            Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
+        }
+        return userHomeObj;
+    }
+}
             
             // 5. 获取所有可收集的能量球
             List<Long> availableBubbles = new ArrayList<>();
