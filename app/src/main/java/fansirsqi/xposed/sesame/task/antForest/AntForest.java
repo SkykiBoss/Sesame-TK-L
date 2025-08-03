@@ -234,38 +234,10 @@ public class AntForest extends ModelTask {
 
         JSONObject root = new JSONObject(resp);
 
-        JSONObject userBase = null;
-
-        // 1. Data.userBaseInfo
-        JSONObject data = root.optJSONObject("Data");
-        if (data != null) {
-            userBase = data.optJSONObject("userBaseInfo");
-            if (userBase != null) {
-                Log.record("PkFriend", "从 Data.userBaseInfo 获取到");
-            } else {
-                Log.record("PkFriend", "Data.userBaseInfo 字段为空");
-            }
-        } else {
-            Log.record("PkFriend", "Data 字段为空");
-        }
-
-        // 2. treeEnergy.userBaseInfo
+        // 注意：没有 Data，直接取
+        JSONObject userBase = root.optJSONObject("userBaseInfo");
         if (userBase == null) {
-            JSONObject treeEnergy = root.optJSONObject("treeEnergy");
-            if (treeEnergy != null) {
-                userBase = treeEnergy.optJSONObject("userBaseInfo");
-                if (userBase != null) {
-                    Log.record("PkFriend", "从 treeEnergy.userBaseInfo 获取到");
-                } else {
-                    Log.record("PkFriend", "treeEnergy.userBaseInfo 字段为空");
-                }
-            } else {
-                Log.record("PkFriend", "treeEnergy 字段为空");
-            }
-        }
-
-        if (userBase == null) {
-            Log.record("PkFriend", "无法获取 userBaseInfo，返回 null");
+            Log.record("PkFriend", "userBaseInfo 字段为空，返回 null");
             return null;
         }
 
@@ -273,8 +245,8 @@ public class AntForest extends ModelTask {
         String name = userBase.optString("displayName", "未知");
 
         Log.record("PkFriend", "解析结果 => userId = " + userId + ", displayName = " + name);
-
         return new PkFriendInfo(userId, name);
+
     } catch (Throwable t) {
         Log.printStackTrace("PkFriend", "queryPkFriendInfo error", t);
         return null;
@@ -1173,26 +1145,29 @@ public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
 //添加pk排行榜
 private void collectPkFriendEnergy() {
     try {
-        JSONObject friendsObject = new JSONObject(AntForestRpcCall.queryTopEnergyChallengeRanking());
-        if (!ResChecker.checkRes(TAG, friendsObject)) {
-            Log.error(TAG, "获取PK排行榜失败: " + friendsObject.optString("resultDesc"));
+        JSONObject root = new JSONObject(AntForestRpcCall.queryTopEnergyChallengeRanking());
+
+        if (!ResChecker.checkRes(TAG, root)) {
+            Log.error(TAG, "获取PK排行榜失败: " + root.optString("resultDesc"));
             return;
         }
 
-        // 收集排名靠前的好友能量（通常含自己）
-        collectFriendsEnergy(friendsObject);
+        // 前20名一般包含自己，可直接统一收集
+        collectFriendsEnergy(root);
 
-        // 分批处理 20 名以后的好友
-        JSONArray totalDatas = friendsObject.optJSONArray("totalData");
-        if (totalDatas == null) return;
+        JSONArray totalDatas = root.optJSONArray("totalData");
+        if (totalDatas == null || totalDatas.length() == 0) {
+            Log.warn(TAG, "PK排行榜 totalData 为空");
+            return;
+        }
 
         List<String> idList = new ArrayList<>();
-        for (int pos = 20; pos < totalDatas.length(); pos++) {
-            JSONObject friend = totalDatas.getJSONObject(pos);
+        for (int i = 20; i < totalDatas.length(); i++) {
+            JSONObject friend = totalDatas.getJSONObject(i);
             String userId = friend.optString("userId", "");
-            if (Objects.equals(userId, selfId)) continue;
+            if (StringUtil.isEmpty(userId) || Objects.equals(userId, selfId)) continue;
 
-            // 🔍 查询昵称并记录日志
+            // 查询昵称（queryFriendHomePage）
             PkFriendInfo info = queryPkFriendInfo(userId);
             if (info != null) {
                 Log.forest("准备收取 PK 好友能量 => " + info.name + "（" + info.userId + "）");
@@ -1201,7 +1176,7 @@ private void collectPkFriendEnergy() {
             }
 
             idList.add(userId);
-            if (idList.size() == 20) {
+            if (idList.size() >= 20) {
                 processBatchFriends(idList);
                 idList.clear();
             }
@@ -1211,15 +1186,13 @@ private void collectPkFriendEnergy() {
             processBatchFriends(idList);
         }
 
-        Log.runtime(TAG, "收取PK好友能量完成！");
-
+        Log.runtime(TAG, "收取 PK 好友能量完成！");
     } catch (JSONException e) {
-        Log.printStackTrace(TAG, "解析PK好友排行榜 JSON 异常", e);
+        Log.printStackTrace(TAG, "解析 PK 好友排行榜 JSON 异常", e);
     } catch (Throwable t) {
         Log.printStackTrace(TAG, "queryTopEnergyChallengeRanking 异常", t);
     }
 }
-
 
     private void collectFriendEnergy() {
         try {
