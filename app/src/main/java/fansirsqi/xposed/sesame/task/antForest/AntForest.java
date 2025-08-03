@@ -226,24 +226,18 @@ public class AntForest extends ModelTask {
         String[] nickNames = {"关闭", "选中复活", "选中不复活"};
     }
 
-    //pk
     // PK 好友信息查询
 public static PkFriendInfo queryPkFriendInfo(String uid) {
     try {
         String resp = AntForestRpcCall.queryFriendHomePage(uid);
-        Log.record("PkFriend", "queryFriendHomePage response: " + resp);
-
         JSONObject root = new JSONObject(resp);
-
         if (!"SUCCESS".equalsIgnoreCase(root.optString("resultCode"))) {
             Log.record("PkFriend", "接口返回非 SUCCESS，终止解析");
             return null;
         }
-
         // 优先 userBaseInfo，其次主结构字段（部分接口版本可能没有 userBaseInfo）
         String userId = uid;
         String name = null;
-
         JSONObject userBase = root.optJSONObject("userBaseInfo");
         if (userBase != null) {
             userId = userBase.optString("userId", uid);
@@ -258,8 +252,6 @@ public static PkFriendInfo queryPkFriendInfo(String uid) {
         if (name == null) {
             name = root.optString("name", "未知"); // 最后一层兜底
         }
-
-        Log.record("PkFriend", "解析结果 => userId = " + userId + ", name = " + name);
         return new PkFriendInfo(userId, name);
 
     } catch (Throwable t) {
@@ -267,7 +259,6 @@ public static PkFriendInfo queryPkFriendInfo(String uid) {
         return null;
     }
 }
-
 
     //pk
     public static class PkFriendInfo {
@@ -1134,7 +1125,6 @@ public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
         }
     }
 
-
     /**
      * 批量或逐一收取能量
      *
@@ -1158,11 +1148,11 @@ public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
             }
         }
     }
+    
 //添加pk排行榜
 private void collectPkFriendEnergy() {
     try {
         JSONObject root = new JSONObject(AntForestRpcCall.queryTopEnergyChallengeRanking());
-
         if (!ResChecker.checkRes(TAG, root)) {
             Log.error(TAG, "获取PK排行榜失败: " + root.optString("resultDesc"));
             return;
@@ -1179,16 +1169,13 @@ private void collectPkFriendEnergy() {
             JSONObject friend = totalDatas.getJSONObject(i);
             String userId = friend.optString("userId", "");
             if (userId.isEmpty() || Objects.equals(userId, selfId)) continue;
-            // 查询昵称（queryFriendHomePage）
+            // 查询昵称
             PkFriendInfo info = queryPkFriendInfo(userId);
-            if (info != null) {
-                Log.forest("准备收取 PK 好友能量 => " + info.name + "（" + info.userId + "）");
-            } else {
-                Log.forest("准备收取 PK 好友能量 => " + userId + "（未查到昵称）");
-            }
+            String display = info != null ? info.name + "（" + info.userId + "）" : "（" + userId + "，未查到昵称）";
+            Log.forest(TAG, "前往PK好友主页视察工作 => " + display);
             idList.add(userId);
             if (idList.size() >= 20) {
-                processBatchFriends(idList);
+                processBatchFriends(idList);  // 这里只收集 userId，日志部分已经输出
                 idList.clear();
             }
         }
