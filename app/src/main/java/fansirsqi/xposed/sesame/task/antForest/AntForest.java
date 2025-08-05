@@ -796,8 +796,8 @@ public class AntForest extends ModelTask {
         return userHomeObj;
     }
 
-    //更新名称
-    private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
+// 更新名称
+private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
     if (friendHomeObj == null) return;
 
     JSONObject treeEnergy = friendHomeObj.optJSONObject("treeEnergy");
@@ -807,7 +807,8 @@ public class AntForest extends ModelTask {
             String uid = userEnergy.optString("userId");
             String displayName = userEnergy.optString("displayName", "");
             if (!StringUtil.isEmpty(uid)) {
-                UserMap.add(new UserEntity(uid, displayName));
+                // 使用默认值补齐参数
+                UserMap.add(new UserEntity(uid, "", null, displayName, "", ""));
             }
         }
     }
