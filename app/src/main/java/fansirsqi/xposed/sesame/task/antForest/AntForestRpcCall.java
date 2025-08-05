@@ -759,9 +759,16 @@ public class AntForestRpcCall {
         String args = "[" + params + "]";
         return RequestManager.requestString("com.alipay.antieptask.finishTaskopengreen", args);
     }
-    //pk
+    
+    // PK 好友排行榜接口请求
 public static String queryTopEnergyChallengeRanking() {
-        String args = "[{\"source\":\"chInfo_ch_appcenter__chsub_9patch\"}]";
-        return RequestManager.requestString("alipay.antforest.forest.h5.queryTopEnergyChallengeRanking", args);
-    }
+    String args = "[{\"source\":\"chInfo_ch_appcenter__chsub_9patch\"}]";
+    return RequestManager.requestString("alipay.antforest.forest.h5.queryTopEnergyChallengeRanking", args);
+}
+
+// 查询PK好友主页（示例，需根据实际接口参数调整）
+public static String queryPkFriendHome(String userId) {
+    String args = "[{\"userId\":\"" + userId + "\", \"fromAct\":\"PKContest\"}]";
+    return RequestManager.requestString("alipay.antforest.forest.h5.queryFriendHomePage", args);
+}
 }
