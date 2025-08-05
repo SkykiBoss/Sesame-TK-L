@@ -226,51 +226,6 @@ public class AntForest extends ModelTask {
         String[] nickNames = {"关闭", "选中复活", "选中不复活"};
     }
 
-    // PK 好友信息查询
-public static PkFriendInfo queryPkFriendInfo(String uid) {
-    try {
-        String resp = AntForestRpcCall.queryFriendHomePage(uid);
-        JSONObject root = new JSONObject(resp);
-        if (!"SUCCESS".equalsIgnoreCase(root.optString("resultCode"))) {
-            Log.record("PkFriend", "接口返回非 SUCCESS，终止解析");
-            return null;
-        }
-        // 优先 userBaseInfo，其次主结构字段（部分接口版本可能没有 userBaseInfo）
-        String userId = uid;
-        String name = null;
-        JSONObject userBase = root.optJSONObject("userBaseInfo");
-        if (userBase != null) {
-            userId = userBase.optString("userId", uid);
-            name = userBase.optString("displayName", null);
-        }
-
-        // 有些接口直接在根结构里返回 displayName
-        if (name == null) {
-            name = root.optString("displayName", null);
-        }
-
-        if (name == null) {
-            name = root.optString("name", "未知"); // 最后一层兜底
-        }
-        return new PkFriendInfo(userId, name);
-
-    } catch (Throwable t) {
-        Log.printStackTrace("PkFriend", "queryPkFriendInfo error", t);
-        return null;
-    }
-}
-
-    //pk
-    public static class PkFriendInfo {
-    public String userId;
-    public String name;
-
-    public PkFriendInfo(String userId, String name) {
-        this.userId = userId;
-        this.name = name;
-    }
-}
-
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
@@ -923,68 +878,53 @@ public static PkFriendInfo queryPkFriendInfo(String uid) {
 
 
     /**
- * 收取用户的蚂蚁森林能量。
- *
- * @param userId      用户ID
- * @param userHomeObj 用户主页的JSON对象，包含用户的蚂蚁森林信息
- * @return 更新后的用户主页JSON对象，如果发生异常返回null
- */
-public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
+     * 收取用户的蚂蚁森林能量。
+     *
+     * @param userId      用户ID
+     * @param userHomeObj 用户主页的JSON对象，包含用户的蚂蚁森林信息
+     * @return 更新后的用户主页JSON对象，如果发生异常返回null
+     */
+    private JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
         try {
+            // 1. 检查接口返回是否成功
             if (!ResChecker.checkRes(TAG, userHomeObj)) {
-                Log.debug(TAG, "载入失败: " + userHomeObj.optString("resultDesc"));
+                Log.debug(TAG, "载入失败: " + userHomeObj.getString("resultDesc"));
                 return userHomeObj;
             }
 
-            long serverTime = userHomeObj.optLong("now", System.currentTimeMillis());
+
+            long serverTime = userHomeObj.getLong("now");
             boolean isSelf = Objects.equals(userId, selfId);
             String userName = UserMap.getMaskName(userId);
 
             if (cacheCollectedList.contains(userId)) {
                 Log.runtime(TAG, userName + "已缓存，跳过");
                 return userHomeObj;
-            }
+            } //该次已缓存，标记为已收取
 
             Log.record(TAG, "进入[" + userName + "]的蚂蚁森林");
 
+            // 3. 判断是否允许收取能量
             if (!collectEnergy.getValue() || dontCollectMap.contains(userId)) {
                 return userHomeObj;
             }
 
-            if (!isSelf) {
-                Log.record(TAG, "进入道具判断逻辑");
-                Log.record(TAG, "当前 selfId = " + selfId);
-                Log.record(TAG, "对方 userId = " + userId);
-                Log.record(TAG, "是否是自己: isSelf = " + isSelf);
-
-                boolean isProtected = false;
-                if (isPkUser(userHomeObj)) {
-                    // PK好友保护判断
-                    isProtected = isPkFriendProtected(userHomeObj, serverTime, selfId);
-                } else {
-                    // 普通好友保护判断
-                    boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
-                    boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
-
-                    Log.record(TAG, "炸弹卡判断结果 = " + bombed);
-                    Log.record(TAG, "能量罩判断结果 = " + shielded);
-
-                    if (shielded) Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
-                    if (bombed) Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
-
-                    isProtected = shielded || bombed;
-                }
-
-                if (isProtected) {
-                    return userHomeObj;
-                }
+            // 4. 检查是否有能量罩保护
+            if (hasEnergyShieldProtection(userHomeObj, serverTime) && !isSelf) {
+                Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
+                return userHomeObj;
             }
 
+            // 5. 获取所有可收集的能量球
             List<Long> availableBubbles = new ArrayList<>();
             List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
 
             extractBubbleInfo(userHomeObj, serverTime, availableBubbles, waitingBubbles, userId);
+
+            // 6. 添加蹲点任务（等待成熟）
             scheduleWaitingBubbles(userId, waitingBubbles);
+
+            // 7. 收集可直接收取的能量
             collectAvailableEnergy(userId, userHomeObj, availableBubbles);
 
             cacheCollectedList.add(userId);
@@ -1000,72 +940,27 @@ public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
         }
     }
 
-    /**
-     * 判断是否为PK好友
-     */
-    private boolean isPkUser(JSONObject userHomeObj) {
-        return userHomeObj.has("rank") || userHomeObj.has("ranking") || userHomeObj.optBoolean("topUser", false);
-    }
 
     /**
-     * PK好友保护判断（能量炸弹卡）
+     * 检查是否有能量罩保护
+     *
+     * @param userHomeObj 用户主页的JSON对象
+     * @param serverTime  服务器时间
+     * @return true 有能量罩保护，false 无能量罩保护
+     * @throws JSONException JSON解析异常
      */
-    private boolean isPkFriendProtected(JSONObject userHomeObj, long serverTime, String selfId) {
-        return hasEnergyBombProtection(userHomeObj, serverTime, selfId);
-    }
-
-    /**
-     * 判断用户道具中是否包含有效的保护道具
-     */
-    private boolean hasPropProtection(JSONArray props, long serverTime, String targetProp, String propTypeKey, String selfId) {
+    private boolean hasEnergyShieldProtection(JSONObject userHomeObj, long serverTime) throws JSONException {
+        JSONArray props = userHomeObj.optJSONArray("usingUserProps");
         if (props == null) return false;
 
         for (int i = 0; i < props.length(); i++) {
-            JSONObject prop = props.optJSONObject(i);
-            if (prop == null) continue;
-
-            if (!targetProp.equals(prop.optString(propTypeKey))) continue;
-
-            long endTime = prop.optLong("endTime", 0);
-            if (endTime <= serverTime) continue;
-
-            if ("ENERGY_BOMB_CARD".equals(targetProp)) {
-                try {
-                    JSONObject extInfo = new JSONObject(prop.optString("extInfo", ""));
-                    JSONArray explodedIds = extInfo.optJSONArray("explodeFriendIds");
-                    if (explodedIds != null) {
-                        for (int j = 0; j < explodedIds.length(); j++) {
-                            if (selfId != null && selfId.equals(explodedIds.optString(j))) {
-                                return true;
-                            }
-                        }
-                    }
-                } catch (JSONException e) {
-                    Log.debug(TAG, "炸弹卡 extInfo 解析失败: " + e.getMessage());
-                }
-                return false;
+            JSONObject prop = props.getJSONObject(i);
+            if ("energyShield".equals(prop.optString("type")) && prop.getLong("endTime") > serverTime) {
+                return true;
             }
-            return true;
         }
         return false;
     }
-
-    /**
-     * 普通好友能量罩保护判断
-     */
-    private boolean hasEnergyShieldProtection(JSONObject userHomeObj, long serverTime) {
-        JSONArray props = userHomeObj.optJSONArray("usingUserProps");
-        return hasPropProtection(props, serverTime, "energyShield", "type", null);
-    }
-
-    /**
-     * PK好友能量炸弹卡保护判断
-     */
-    private boolean hasEnergyBombProtection(JSONObject userHomeObj, long serverTime, String selfId) {
-        JSONArray props = userHomeObj.optJSONArray("usingUserPropsNew");
-        return hasPropProtection(props, serverTime, "ENERGY_BOMB_CARD", "propType", selfId);
-    }
-
 
     /**
      * 提取能量球状态
@@ -1125,6 +1020,7 @@ public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
         }
     }
 
+
     /**
      * 批量或逐一收取能量
      *
@@ -1148,73 +1044,47 @@ public JSONObject collectUserEnergy(String userId, JSONObject userHomeObj) {
             }
         }
     }
-    
 //添加pk排行榜
 private void collectPkFriendEnergy() {
-    try {
-        JSONObject root = new JSONObject(AntForestRpcCall.queryTopEnergyChallengeRanking());
-        if (!ResChecker.checkRes(TAG, root)) {
-            Log.error(TAG, "获取PK排行榜失败: " + root.optString("resultDesc"));
-            return;
-        }
-        // 前20名一般包含自己，可直接统一收集（结构和普通好友类似）
-        collectFriendsEnergy(root);
-
-        JSONArray totalDatas = root.optJSONArray("totalData");
-        if (totalDatas == null || totalDatas.length() == 0) {
-            Log.forest(TAG, "PK排行榜 totalData 为空");
-            return;
-        }
-        List<String> idList = new ArrayList<>();
-        for (int i = 30; i < totalDatas.length(); i++) {
-            JSONObject friend = totalDatas.getJSONObject(i);
-            String userId = friend.optString("userId", "");
-            if (userId.isEmpty() || Objects.equals(userId, selfId)) continue;
-
-            // 查询昵称，用于日志显示
-            PkFriendInfo info = queryPkFriendInfo(userId);
-            String display = info != null ? info.name + "（" + info.userId + "）" : "（" + userId + "，未查到昵称）";
-            Log.forest(TAG, "前往PK好友主页视察工作 => " + display);
-
-            idList.add(userId);
-            if (idList.size() >= 30) {
-                processBatchPkFriends(idList);  // 使用PK好友专用批量处理接口
-                idList.clear();
+        try {
+            JSONObject friendsObject = new JSONObject(AntForestRpcCall.queryTopEnergyChallengeRanking());
+            if (!ResChecker.checkRes(TAG, friendsObject)) {
+                Log.error(TAG, "获取PK排行榜失败: " + friendsObject.optString("resultDesc"));
+                return;
             }
-        }
-        if (!idList.isEmpty()) {
-            processBatchPkFriends(idList);  // 处理剩余PK好友
-        }
-        Log.runtime(TAG, "收取 PK 好友能量完成！");
-    } catch (JSONException e) {
-        Log.printStackTrace(TAG, "解析 PK 好友排行榜 JSON 异常", e);
-    } catch (Throwable t) {
-        Log.printStackTrace(TAG, "queryTopEnergyChallengeRanking 异常", t);
-    }
-}
 
-    // PK好友批量处理入口，参数是userId列表
-private void processBatchPkFriends(List<String> userIds) {
-    try {
-        // 用PK好友专用接口批量查询好友详情
-        String jsonStr = AntForestRpcCall.queryPkFriendBatchInfo(new JSONArray(userIds).toString());
-        JSONObject batchObj = new JSONObject(jsonStr);
-        JSONArray friendRanking = batchObj.optJSONObject("resData").optJSONArray("friendRanking");
-        if (friendRanking == null) {
-            Log.forest(TAG, "PK好友批量接口返回数据为空");
-            return;
-        }
-        for (int i = 0; i < friendRanking.length(); i++) {
-            JSONObject friendObj = friendRanking.getJSONObject(i);
-            processSingleFriend(friendObj);  // 复用普通好友收能量逻辑
-        }
-    } catch (JSONException e) {
-        Log.printStackTrace(TAG, "解析PK好友批量数据失败", e);
-    } catch (Exception e) {
-        Log.printStackTrace(TAG, "处理PK好友批量出错", e);
-    }
-}
+            // 处理排名靠前的好友（通常自己也在其中） 20个
+            collectFriendsEnergy(friendsObject);
 
+            // 分批处理其他好友（从第20位开始）
+            JSONArray totalDatas = friendsObject.optJSONArray("totalData");
+            if (totalDatas == null) return;
+
+            List<String> idList = new ArrayList<>();
+            for (int pos = 20; pos < totalDatas.length(); pos++) {
+                JSONObject friend = totalDatas.getJSONObject(pos);
+                String userId = friend.getString("userId");
+
+                if (Objects.equals(userId, selfId)) continue; //如果是自己则跳过
+
+                idList.add(userId);
+                if (idList.size() == 20) {
+                    processBatchFriends(idList);//20个id 一次处理
+                    idList.clear();
+                }
+            }
+            if (!idList.isEmpty()) {
+                processBatchFriends(idList);
+            }
+
+            Log.runtime(TAG, "收取PK好友能量完成！");
+
+        } catch (JSONException e) {
+            Log.printStackTrace(TAG, "解析PK好友排行榜 JSON 异常", e);
+        } catch (Throwable t) {
+            Log.printStackTrace(TAG, "queryTopEnergyChallengeRanking 异常", t);
+        }
+    }
     private void collectFriendEnergy() {
         try {
             JSONObject friendsObject = new JSONObject(AntForestRpcCall.queryEnergyRanking());
@@ -1223,23 +1093,23 @@ private void processBatchPkFriends(List<String> userIds) {
                 return;
             }
 
-            // 处理排名靠前的好友（通常自己也在其中） 30个
+            // 处理排名靠前的好友（通常自己也在其中） 20个
             collectFriendsEnergy(friendsObject);
 
-            // 分批处理其他好友（从第30位开始）
+            // 分批处理其他好友（从第20位开始）
             JSONArray totalDatas = friendsObject.optJSONArray("totalDatas");
             if (totalDatas == null) return;
 
             List<String> idList = new ArrayList<>();
-            for (int pos = 30; pos < totalDatas.length(); pos++) {
+            for (int pos = 20; pos < totalDatas.length(); pos++) {
                 JSONObject friend = totalDatas.getJSONObject(pos);
                 String userId = friend.getString("userId");
 
                 if (Objects.equals(userId, selfId)) continue; //如果是自己则跳过
 
                 idList.add(userId);
-                if (idList.size() == 30) {
-                    processBatchFriends(idList);//30个id 一次处理
+                if (idList.size() == 20) {
+                    processBatchFriends(idList);//20个id 一次处理
                     idList.clear();
                 }
             }
@@ -1256,7 +1126,8 @@ private void processBatchPkFriends(List<String> userIds) {
         }
     }
 
-     /**
+
+    /**
      * 批量处理好友 - 收能量
      *
      * @param userIds 用户id列表
@@ -1278,112 +1149,72 @@ private void processBatchPkFriends(List<String> userIds) {
             Log.printStackTrace(TAG, "处理批量好友出错", e);
         }
     }
-    
-/**
- * 处理单个好友 - 收能量（普通好友和PK好友共用）
- *
- * @param friendObj 好友的JSON对象
- */
-private void processSingleFriend(JSONObject friendObj) {
-    try {
-        String userId = friendObj.getString("userId");
-        String userName = friendObj.optString("displayName", "未知好友"); // PK好友和普通好友都用displayName字段
-        if (Objects.equals(userId, selfId)) return;//如果是自己，则跳过
 
-        boolean needCollectEnergy = collectEnergy.getValue() && !dontCollectMap.contains(userId); //开启了收能量功能且不排除
-        boolean needHelpProtect = helpFriendCollectType.getValue() != HelpFriendCollectType.NONE
-                && friendObj.optBoolean("canProtectBubble")
-                && Status.hasFlagToday("help_friend_collect_protect::" + selfId);
+    /**
+     * 处理单个好友 - 收能量
+     *
+     * @param friendObj 好友的JSON对象
+     */
+    private void processSingleFriend(JSONObject friendObj) {
+        try {
+            String userId = friendObj.getString("userId");
+            String userName = UserMap.getMaskName(userId);
+            if (Objects.equals(userId, selfId)) return;//如果是自己，则跳过
+            boolean needCollectEnergy = collectEnergy.getValue() && !dontCollectMap.contains(userId); //开启了收能量功能并且不在排除名单中
+            boolean needHelpProtect = helpFriendCollectType.getValue() != HelpFriendCollectType.NONE && friendObj.optBoolean("canProtectBubble") && Status.hasFlagToday("help_friend_collect_protect::" + selfId);
 
-        boolean needCollectGiftBox = collectGiftBox.getValue() && friendObj.optBoolean("canCollectGiftBox");
-
-        if (!needCollectEnergy && !needHelpProtect && !needCollectGiftBox) {
-            return;
-        }
-
-        // 是否可以收能量
-        boolean canCollect = false;
-        if (needCollectEnergy) {
-            if (friendObj.optBoolean("canCollectEnergy")) {
-                long canCollectLaterTime = friendObj.optLong("canCollectLaterTime", -1);
-                if (canCollectLaterTime > 0 && canCollectLaterTime - System.currentTimeMillis() < checkIntervalInt) {
-                    canCollect = true;
+            boolean needCollectGiftBox = collectGiftBox.getValue() && friendObj.optBoolean("canCollectGiftBox");
+            if (!needCollectEnergy && !needHelpProtect && !needCollectGiftBox) {
+                return;
+            }
+            // 是否需要收集能量
+            boolean canCollect = false;
+            if (needCollectEnergy) {
+                if (friendObj.optBoolean("canCollectEnergy")) {
+                    long canCollectLaterTime = friendObj.getLong("canCollectLaterTime");
+                    if (canCollectLaterTime > 0 && canCollectLaterTime - System.currentTimeMillis() < checkIntervalInt) {//如果收取时间在执行时间范围内，则可以收取
+                        canCollect = true;
+                    }
                 }
             }
-        }
 
-        JSONObject userHomeObj = null;
-        // 执行收集
-        if (needCollectEnergy && canCollect) {
-            userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
-            Log.forest(TAG, "已收取好友【" + userName + "】的能量");
-        }
-
-        // 保护好友能量气泡
-        if (needHelpProtect) {
-            boolean isProtected = helpFriendCollectList.getValue().contains(userId);
-            if (helpFriendCollectType.getValue() != HelpFriendCollectType.HELP) {
-                isProtected = !isProtected;
+            JSONObject userHomeObj = null;
+            // 开始执行收集能量
+            if (needCollectEnergy && canCollect) {
+                userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
             }
-            if (isProtected) {
+
+            if (needHelpProtect) {
+                boolean isProtected = helpFriendCollectList.getValue().contains(userId);
+                if (helpFriendCollectType.getValue() != HelpFriendCollectType.HELP) {
+                    isProtected = !isProtected;
+                }
+                if (isProtected) {
+                    if (userHomeObj == null) {
+                        userHomeObj = queryFriendHome(userId);
+                    }
+                    if (userHomeObj != null) {
+                        protectFriendEnergy(userHomeObj);
+                    }
+                }
+            }
+
+            // 尝试领取礼物盒
+            if (needCollectGiftBox) {
                 if (userHomeObj == null) {
                     userHomeObj = queryFriendHome(userId);
                 }
                 if (userHomeObj != null) {
-                    protectFriendEnergy(userHomeObj);
-                    Log.forest(TAG, "已保护好友【" + userName + "】的能量气泡");
+                    collectGiftBox(userHomeObj);
                 }
             }
-        }
 
-        // 收集礼物盒
-        if (needCollectGiftBox) {
-            if (userHomeObj == null) {
-                userHomeObj = queryFriendHome(userId);
-            }
-            if (userHomeObj != null) {
-                collectGiftBox(userHomeObj);
-                Log.forest(TAG, "已收取好友【" + userName + "】的礼物盒");
-            }
+        } catch (JSONException e) {
+            Log.printStackTrace(TAG, "处理单个好友[" + friendObj.optString("userId") + "]出错", e);
+        } catch (Exception e) {
+            Log.printStackTrace(TAG, "处理好友异常", e);
         }
-    } catch (JSONException e) {
-        Log.printStackTrace(TAG, "处理好友[" + friendObj.optString("userId") + "]异常", e);
-    } catch (Exception e) {
-        Log.printStackTrace(TAG, "处理好友异常", e);
     }
-}
-
-    /**
- * PK好友收能量入口
- *
- * @param friendsObject PK好友排行榜的JSON对象（接口返回的完整数据）
- */
-private void collectPkFriendsEnergy(JSONObject friendsObject) {
-    try {
-        if (errorWait) return;
-
-        JSONObject resData = friendsObject.optJSONObject("resData");
-        if (resData == null) {
-            Log.forest(TAG, "无PK好友数据可处理");
-            return;
-        }
-
-        JSONArray friendRanking = resData.optJSONArray("friendRanking");
-        if (friendRanking == null) {
-            Log.forest(TAG, "PK好友列表为空");
-            return;
-        }
-
-        for (int i = 0; i < friendRanking.length(); i++) {
-            JSONObject friendObj = friendRanking.getJSONObject(i);
-            processSingleFriend(friendObj); // 处理单个PK好友，复用同一逻辑
-        }
-    } catch (JSONException e) {
-        Log.printStackTrace(TAG, "解析PK好友排行榜失败", e);
-    } catch (Exception e) {
-        Log.printStackTrace(TAG, "处理PK好友列表异常", e);
-    }
-}
 
     /**
      * 收取好友能量
