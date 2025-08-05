@@ -32,9 +32,6 @@ public class UserMap {
     private static final Map<String, UserEntity> userMap = new ConcurrentHashMap<>();
     // 只读的用户信息映射
     private static final Map<String, UserEntity> readOnlyUserMap = Collections.unmodifiableMap(userMap);
-    // 用于存储 displayName -> UserEntity 的映射（PK好友用）
-    private static final Map<String, UserEntity> pkFriendMap = new ConcurrentHashMap<>();
-
     /**
      * 当前用户ID
      */
@@ -155,27 +152,20 @@ public class UserMap {
      * @param userId 用户ID
      * @return 掩码名称
      */
-    public static String getMaskName(String userIdOrDisplayName) {
-    UserEntity userEntity = userMap.get(userIdOrDisplayName);
-    if (userEntity == null) {
-        userEntity = pkFriendMap.get(userIdOrDisplayName); // fallback 到 pkFriendMap
+    public static String getMaskName(String userId) {
+        UserEntity userEntity = userMap.get(userId);
+        return userEntity == null ? null : userEntity.getMaskName();
     }
-    return userEntity == null ? null : userEntity.getMaskName();
-}
     /**
      * 获取指定用户的完整名称
      *
      * @param userId 用户ID
      * @return 完整名称
      */
-    public static String getFullName(String userIdOrDisplayName) {
-    UserEntity userEntity = userMap.get(userIdOrDisplayName);
-    if (userEntity == null) {
-        userEntity = pkFriendMap.get(userIdOrDisplayName); // fallback 到 pkFriendMap
+    public static String getFullName(String userId) {
+        UserEntity userEntity = userMap.get(userId);
+        return userEntity == null ? null : userEntity.getFullName();
     }
-    return userEntity == null ? null : userEntity.getFullName();
-}
-
     /**
      * 获取指定用户实体
      *
@@ -191,27 +181,18 @@ public class UserMap {
      * @param userEntity 用户实体
      */
     public static synchronized void add(UserEntity userEntity) {
-    if (userEntity.getUserId() != null && !userEntity.getUserId().isEmpty()) {
-        userMap.put(userEntity.getUserId(), userEntity);
+        if (userEntity.getUserId() != null && !userEntity.getUserId().isEmpty()) {
+            userMap.put(userEntity.getUserId(), userEntity);
+        }
     }
-    if (userEntity.getShowName() != null && !userEntity.getShowName().isEmpty()) {
-        pkFriendMap.put(userEntity.getShowName(), userEntity);
-    }
-}
     /**
      * 从映射中移除指定用户
      *
      * @param userId 用户ID
      */
-    public static synchronized void remove(String userIdOrDisplayName) {
-    UserEntity removed = userMap.remove(userIdOrDisplayName);
-    if (removed != null && removed.getShowName() != null) {
-        pkFriendMap.remove(removed.getShowName());
-    } else {
-        pkFriendMap.remove(userIdOrDisplayName);
+    public static synchronized void remove(String userId) {
+        userMap.remove(userId);
     }
-}
-
     /**
      * 加载用户数据
      *
@@ -283,5 +264,4 @@ public class UserMap {
         String body = JsonUtil.formatJson(userEntity);
         Files.write2File(body, Files.getSelfIdFile(userEntity.getUserId()));
     }
-    
 }
