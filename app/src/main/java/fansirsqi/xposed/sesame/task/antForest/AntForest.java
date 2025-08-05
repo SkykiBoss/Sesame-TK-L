@@ -803,28 +803,27 @@ private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
     JSONObject treeEnergy = friendHomeObj.optJSONObject("treeEnergy");
     if (treeEnergy == null) return;
 
-    // 优先从 userBaseInfo 中取名称
-    JSONObject baseInfo = treeEnergy.optJSONObject("userBaseInfo");
-    if (baseInfo != null) {
-        String uid = baseInfo.optString("userId");
-        String displayName = baseInfo.optString("displayName", "");
+    // 优先从 userBaseInfo 提取更完整的用户信息
+    JSONObject userBaseInfo = treeEnergy.optJSONObject("userBaseInfo");
+    if (userBaseInfo != null) {
+        String uid = userBaseInfo.optString("userId");
+        String displayName = userBaseInfo.optString("displayName", "");
         if (!StringUtil.isEmpty(uid)) {
-            UserMap.add(new UserEntity(uid, displayName));
+            UserMap.add(new UserEntity(uid, "", 1, displayName, "", ""));
             return;
         }
     }
 
-    // 兼容旧结构：从 userEnergy 中取
+    // 其次兼容从 userEnergy 提取（部分接口只返回这部分）
     JSONObject userEnergy = treeEnergy.optJSONObject("userEnergy");
     if (userEnergy != null) {
         String uid = userEnergy.optString("userId");
         String displayName = userEnergy.optString("displayName", "");
         if (!StringUtil.isEmpty(uid)) {
-            UserMap.add(new UserEntity(uid, displayName));
+            UserMap.add(new UserEntity(uid, "", 1, displayName, "", ""));
         }
     }
 }
-
 
     /**
      * 更新好友主页信息
