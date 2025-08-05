@@ -794,27 +794,46 @@ public class AntForest extends ModelTask {
         return userHomeObj;
     }
 
+    //更新名称
+    private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
+    if (friendHomeObj == null) return;
+
+    JSONObject treeEnergy = friendHomeObj.optJSONObject("treeEnergy");
+    if (treeEnergy != null) {
+        JSONObject userEnergy = treeEnergy.optJSONObject("userEnergy");
+        if (userEnergy != null) {
+            String uid = userEnergy.optString("userId");
+            String displayName = userEnergy.optString("displayName", "");
+            if (!StringUtil.isEmpty(uid)) {
+                UserMap.add(new UserEntity(uid, displayName));
+            }
+        }
+    }
+}
+
     /**
      * 更新好友主页信息
      *
      * @param userId 好友ID
      * @return 更新后的好友主页信息，如果发生错误则返回null。
      */
-
     private JSONObject queryFriendHome(String userId) {
-        JSONObject friendHomeObj = null;
-        try {
-            long start = System.currentTimeMillis();
-            friendHomeObj = new JSONObject(AntForestRpcCall.queryFriendHomePage(userId));
-            long end = System.currentTimeMillis();
-            long serverTime = friendHomeObj.getLong("now");
-            int offsetTime = offsetTimeMath.nextInteger((int) ((start + end) / 2 - serverTime));
-            Log.runtime(TAG, "服务器时间：" + serverTime + "，本地与服务器时间差：" + offsetTime);
-        } catch (Throwable t) {
-            Log.printStackTrace(t);
-        }
-        return friendHomeObj; // 返回用户主页对象
+    JSONObject friendHomeObj = null;
+    try {
+        long start = System.currentTimeMillis();
+        friendHomeObj = new JSONObject(AntForestRpcCall.queryFriendHomePage(userId));
+        long end = System.currentTimeMillis();
+        long serverTime = friendHomeObj.getLong("now");
+        int offsetTime = offsetTimeMath.nextInteger((int) ((start + end) / 2 - serverTime));
+        Log.runtime(TAG, "服务器时间：" + serverTime + "，本地与服务器时间差：" + offsetTime);
+
+        // 更新用户映射名称
+        updateUserMapFromFriendHome(friendHomeObj);
+    } catch (Throwable t) {
+        Log.printStackTrace(t);
     }
+    return friendHomeObj;
+}
 
 
     /**
@@ -943,17 +962,31 @@ public class AntForest extends ModelTask {
      * @throws JSONException JSON解析异常
      */
     private boolean hasEnergyShieldProtection(JSONObject userHomeObj, long serverTime) throws JSONException {
-    JSONArray props = userHomeObj.optJSONArray("usingUserProps");
+    // 先尝试新版字段
+    JSONArray props = userHomeObj.optJSONArray("usingUserPropsNew");
+    if (props == null) {
+        // 兼容旧版字段
+        props = userHomeObj.optJSONArray("usingUserProps");
+    }
     if (props == null) return false;
 
     for (int i = 0; i < props.length(); i++) {
         JSONObject prop = props.getJSONObject(i);
-        String type = prop.optString("type"); // 如 energyShield、energyBomb
+        String propType = prop.optString("propType");
+        if (propType.isEmpty()) {
+            // 兼容老版本的 type 字段
+            propType = prop.optString("type");
+        }
         long endTime = prop.optLong("endTime", 0L);
 
-        // 命中能量罩或炸弹卡，且当前仍在保护期内
-        if (("energyShield".equals(type) || "energyBomb".equals(type)) && endTime > serverTime) {
-            return true;
+        // 抓包显示的新旧类型可能不同，统一判断
+        if (endTime > serverTime) {
+            if ("ENERGY_SHIELD".equalsIgnoreCase(propType)
+                || "ENERGY_BOMB_CARD".equalsIgnoreCase(propType)
+                || "energyShield".equalsIgnoreCase(propType)
+                || "energyBomb".equalsIgnoreCase(propType)) {
+                return true;
+            }
         }
     }
     return false;
@@ -1152,8 +1185,9 @@ public class AntForest extends ModelTask {
         JSONObject userHomeObj = null;
 
         if (needCollectEnergy && canCollect) {
-            userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
-        }
+           userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
+           updateUserMapFromFriendHome(userHomeObj); // ✨ 新增：提取昵称
+           }
 
         // 能量球提取与蹲点调度
         if (userHomeObj != null) {
