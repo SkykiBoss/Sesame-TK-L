@@ -801,26 +801,19 @@ private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
     if (friendHomeObj == null) return;
 
     JSONObject treeEnergy = friendHomeObj.optJSONObject("treeEnergy");
-    if (treeEnergy == null) return;
+    if (treeEnergy != null) {
+        JSONObject userBaseInfo = treeEnergy.optJSONObject("userBaseInfo");
+        if (userBaseInfo != null) {
+            String userId = userBaseInfo.optString("userId", "");
+            String account = userBaseInfo.optString("loginId", "");
+            Integer friendStatus = 0; // 默认0或null，具体看需求
+            String realName = userBaseInfo.optString("realName", "");
+            String nickName = userBaseInfo.optString("displayName", "");
+            String remarkName = ""; // 备注名暂无数据来源，暂时空字符串
 
-    // 优先从 userBaseInfo 提取更完整的用户信息
-    JSONObject userBaseInfo = treeEnergy.optJSONObject("userBaseInfo");
-    if (userBaseInfo != null) {
-        String uid = userBaseInfo.optString("userId");
-        String displayName = userBaseInfo.optString("displayName", "");
-        if (!StringUtil.isEmpty(uid)) {
-            UserMap.add(new UserEntity(uid, "", 1, displayName, "", ""));
-            return;
-        }
-    }
-
-    // 其次兼容从 userEnergy 提取（部分接口只返回这部分）
-    JSONObject userEnergy = treeEnergy.optJSONObject("userEnergy");
-    if (userEnergy != null) {
-        String uid = userEnergy.optString("userId");
-        String displayName = userEnergy.optString("displayName", "");
-        if (!StringUtil.isEmpty(uid)) {
-            UserMap.add(new UserEntity(uid, "", 1, displayName, "", ""));
+            if (!StringUtil.isEmpty(userId)) {
+                UserMap.add(new UserEntity(userId, account, friendStatus, realName, nickName, remarkName));
+            }
         }
     }
 }
