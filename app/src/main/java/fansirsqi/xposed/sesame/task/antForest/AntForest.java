@@ -949,7 +949,7 @@ public class AntForest extends ModelTask {
      * @return true 有保护，false 无保护
      * @throws JSONException JSON解析异常
      */
-    private boolean hasShieldOrBombProtection(JSONObject userHomeObj, long serverTime) throws JSONException {
+    private boolean hasEnergyShieldProtection(JSONObject userHomeObj, long serverTime) throws JSONException {
     JSONArray props = userHomeObj.optJSONArray("usingUserProps");
     if (props == null) return false;
 
