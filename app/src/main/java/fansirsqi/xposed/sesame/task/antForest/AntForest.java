@@ -1189,9 +1189,11 @@ private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
         JSONObject userHomeObj = null;
 
         if (needCollectEnergy && canCollect) {
-           userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
-           updateUserMapFromFriendHome(userHomeObj); // ✨ 新增：提取昵称
-           }
+            userHomeObj = queryFriendHome(userId);
+            updateUserMapFromFriendHome(userHomeObj); // ✅ 提前更新昵称
+            userHomeObj = collectUserEnergy(userId, userHomeObj); // 再进入能量收取逻辑
+            }
+
 
         // 能量球提取与蹲点调度
         if (userHomeObj != null) {
