@@ -1128,65 +1128,64 @@ public class AntForest extends ModelTask {
      * @param friendObj 好友的JSON对象
      */
     private void processSingleFriend(JSONObject friendObj) {
-        try {
-            String userId = friendObj.getString("userId");
-            String userName = UserMap.getMaskName(userId);
-            if (Objects.equals(userId, selfId)) return;//如果是自己，则跳过
-            boolean needCollectEnergy = collectEnergy.getValue() && !dontCollectMap.contains(userId); //开启了收能量功能并且不在排除名单中
-            boolean needHelpProtect = helpFriendCollectType.getValue() != HelpFriendCollectType.NONE && friendObj.optBoolean("canProtectBubble") && Status.hasFlagToday("help_friend_collect_protect::" + selfId);
+    try {
+        String userId = friendObj.getString("userId");
+        if (Objects.equals(userId, selfId)) return; // 自己跳过
 
-            boolean needCollectGiftBox = collectGiftBox.getValue() && friendObj.optBoolean("canCollectGiftBox");
-            if (!needCollectEnergy && !needHelpProtect && !needCollectGiftBox) {
-                return;
-            }
-            // 是否需要收集能量
-            boolean canCollect = false;
-            if (needCollectEnergy) {
-                if (friendObj.optBoolean("canCollectEnergy")) {
-                    long canCollectLaterTime = friendObj.getLong("canCollectLaterTime");
-                    if (canCollectLaterTime > 0 && canCollectLaterTime - System.currentTimeMillis() < checkIntervalInt) {//如果收取时间在执行时间范围内，则可以收取
-                        canCollect = true;
-                    }
-                }
-            }
+        boolean needCollectEnergy = collectEnergy.getValue() && !dontCollectMap.contains(userId);
+        boolean needCollectGiftBox = collectGiftBox.getValue() && friendObj.optBoolean("canCollectGiftBox");
 
-            JSONObject userHomeObj = null;
-            // 开始执行收集能量
-            if (needCollectEnergy && canCollect) {
-                userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
-            }
-
-            if (needHelpProtect) {
-                boolean isProtected = helpFriendCollectList.getValue().contains(userId);
-                if (helpFriendCollectType.getValue() != HelpFriendCollectType.HELP) {
-                    isProtected = !isProtected;
-                }
-                if (isProtected) {
-                    if (userHomeObj == null) {
-                        userHomeObj = queryFriendHome(userId);
-                    }
-                    if (userHomeObj != null) {
-                        protectFriendEnergy(userHomeObj);
-                    }
-                }
-            }
-
-            // 尝试领取礼物盒
-            if (needCollectGiftBox) {
-                if (userHomeObj == null) {
-                    userHomeObj = queryFriendHome(userId);
-                }
-                if (userHomeObj != null) {
-                    collectGiftBox(userHomeObj);
-                }
-            }
-
-        } catch (JSONException e) {
-            Log.printStackTrace(TAG, "处理单个好友[" + friendObj.optString("userId") + "]出错", e);
-        } catch (Exception e) {
-            Log.printStackTrace(TAG, "处理好友异常", e);
+        if (!needCollectEnergy && !needCollectGiftBox) {
+            return;
         }
+
+        boolean canCollect = false;
+        if (needCollectEnergy) {
+            if (friendObj.optBoolean("canCollectEnergy")) {
+                long canCollectLaterTime = friendObj.getLong("canCollectLaterTime");
+                if (canCollectLaterTime > 0 && canCollectLaterTime - System.currentTimeMillis() < checkIntervalInt) {
+                    canCollect = true;
+                }
+            }
+        }
+
+        JSONObject userHomeObj = null;
+
+        if (needCollectEnergy && canCollect) {
+            userHomeObj = collectUserEnergy(userId, queryFriendHome(userId));
+        }
+
+        // 能量球提取与蹲点调度
+        if (userHomeObj != null) {
+            List<Long> availableBubbles = new ArrayList<>();
+            List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
+            long serverTime = System.currentTimeMillis();
+
+            extractBubbleInfo(userHomeObj, serverTime, availableBubbles, waitingBubbles, userId);
+
+            if (!availableBubbles.isEmpty()) {
+                collectEnergyBalls(userId, availableBubbles);
+            }
+            if (!waitingBubbles.isEmpty()) {
+                scheduleWaitingBubbles(userId, waitingBubbles);
+            }
+        }
+
+        if (needCollectGiftBox) {
+            if (userHomeObj == null) {
+                userHomeObj = queryFriendHome(userId);
+            }
+            if (userHomeObj != null) {
+                collectGiftBox(userHomeObj);
+            }
+        }
+
+    } catch (JSONException e) {
+        Log.printStackTrace(TAG, "处理单个好友[" + friendObj.optString("userId") + "]出错", e);
+    } catch (Exception e) {
+        Log.printStackTrace(TAG, "处理好友异常", e);
     }
+}
 
     /**
      * 收取好友能量
