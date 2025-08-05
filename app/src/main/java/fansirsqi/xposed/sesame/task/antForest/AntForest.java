@@ -485,8 +485,8 @@ public class AntForest extends ModelTask {
             JSONArray jsonArray = currentObj.optJSONArray(arrayKey);
             if (jsonArray != null && jsonArray.length() > 0) {
                 handler.handle(jsonArray);
-                // 判断是否还有更多数据（比如返回满20个）
-                hasMore = jsonArray.length() >= 20;
+                // 判断是否还有更多数据（比如返回满30个）
+                hasMore = jsonArray.length() >= 30;
             } else {
                 hasMore = false;
             }
