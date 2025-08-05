@@ -907,8 +907,9 @@ private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
                 Log.debug(TAG, "载入失败: " + userHomeObj.getString("resultDesc"));
                 return userHomeObj;
             }
-
-
+            //映射好友名称
+            updateUserMapFromFriendHome(userHomeObj);
+            
             long serverTime = userHomeObj.getLong("now");
             boolean isSelf = Objects.equals(userId, selfId);
             String userName = UserMap.getMaskName(userId);
