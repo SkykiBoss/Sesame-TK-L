@@ -764,35 +764,4 @@ public static String queryTopEnergyChallengeRanking() {
         String args = "[{\"source\":\"chInfo_ch_appcenter__chsub_9patch\"}]";
         return RequestManager.requestString("alipay.antforest.forest.h5.queryTopEnergyChallengeRanking", args);
     }
-    
-    //pk
-    public static String queryPkFriendBatchInfo(String userIdsJsonArrayStr) {
-    try {
-        JSONArray userIds = new JSONArray(userIdsJsonArrayStr);
-        JSONArray requestArray = new JSONArray();
-        for (int i = 0; i < userIds.length(); i++) {
-            String userId = userIds.getString(i);
-            JSONObject obj = new JSONObject();
-            obj.put("activityParam", new JSONObject());
-            obj.put("canRobFlags", "F,F,F,F,F");
-            obj.put("configVersionMap", new JSONObject().put("wateringBubbleConfig", "0"));
-            obj.put("currentEnergy", 0);
-            obj.put("currentVitalityAmount", 0);
-            obj.put("fromAct", "PKContest");
-            obj.put("skipWhackMole", false);
-            obj.put("source", "chInfo_ch_appcenter__chsub_9patch");
-            obj.put("userId", userId);
-            obj.put("version", VERSION);
-            requestArray.put(obj);
-        }
-        return RequestManager.requestString(
-            "alipay.antforest.forest.h5.queryFriendHomePage",
-            requestArray.toString()
-        );
-    } catch (JSONException e) {
-        e.printStackTrace();
-        return null;
-    }
-}
-
 }
