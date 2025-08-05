@@ -909,9 +909,9 @@ public class AntForest extends ModelTask {
                 return userHomeObj;
             }
 
-            // 4. 检查是否有能量罩保护
+            // 4. 检查是否有道具保护
             if (hasEnergyShieldProtection(userHomeObj, serverTime) && !isSelf) {
-                Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
+                Log.record(TAG, "[" + userName + "]被道具保护着哟（自行前往查看，如果界面无保护罩，大概率用了炸弹卡。）");
                 return userHomeObj;
             }
 
@@ -942,25 +942,29 @@ public class AntForest extends ModelTask {
 
 
     /**
-     * 检查是否有能量罩保护
+     * 检查是否有能量罩/炸弹卡保护
      *
      * @param userHomeObj 用户主页的JSON对象
      * @param serverTime  服务器时间
-     * @return true 有能量罩保护，false 无能量罩保护
+     * @return true 有保护，false 无保护
      * @throws JSONException JSON解析异常
      */
-    private boolean hasEnergyShieldProtection(JSONObject userHomeObj, long serverTime) throws JSONException {
-        JSONArray props = userHomeObj.optJSONArray("usingUserProps");
-        if (props == null) return false;
+    private boolean hasShieldOrBombProtection(JSONObject userHomeObj, long serverTime) throws JSONException {
+    JSONArray props = userHomeObj.optJSONArray("usingUserProps");
+    if (props == null) return false;
 
-        for (int i = 0; i < props.length(); i++) {
-            JSONObject prop = props.getJSONObject(i);
-            if ("energyShield".equals(prop.optString("type")) && prop.getLong("endTime") > serverTime) {
-                return true;
-            }
+    for (int i = 0; i < props.length(); i++) {
+        JSONObject prop = props.getJSONObject(i);
+        String type = prop.optString("type"); // 如 energyShield、energyBomb
+        long endTime = prop.optLong("endTime", 0L);
+
+        // 命中能量罩或炸弹卡，且当前仍在保护期内
+        if (("energyShield".equals(type) || "energyBomb".equals(type)) && endTime > serverTime) {
+            return true;
         }
-        return false;
     }
+    return false;
+}
 
     /**
      * 提取能量球状态
