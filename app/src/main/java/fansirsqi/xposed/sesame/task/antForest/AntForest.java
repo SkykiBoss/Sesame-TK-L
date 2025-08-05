@@ -798,25 +798,44 @@ public class AntForest extends ModelTask {
 
 // 更新名称
 private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
-    if (friendHomeObj == null) return;
+    if (friendHomeObj == null) {
+        Log.runtime(TAG, "[updateUserMap] friendHomeObj is null");
+        return;
+    }
+
+    Log.runtime(TAG, "[updateUserMap] friendHomeObj 内容: " + friendHomeObj.toString());
 
     JSONObject treeEnergy = friendHomeObj.optJSONObject("treeEnergy");
-    if (treeEnergy != null) {
-        JSONObject userBaseInfo = treeEnergy.optJSONObject("userBaseInfo");
-        if (userBaseInfo != null) {
-            String userId = userBaseInfo.optString("userId", "");
-            String account = userBaseInfo.optString("loginId", "");
-            Integer friendStatus = 0; // 默认0或null，具体看需求
-            String realName = userBaseInfo.optString("realName", "");
-            String nickName = userBaseInfo.optString("displayName", "");
-            String remarkName = ""; // 备注名暂无数据来源，暂时空字符串
+    if (treeEnergy == null) {
+        Log.runtime(TAG, "[updateUserMap] treeEnergy is null");
+        return;
+    }
 
-            if (!StringUtil.isEmpty(userId)) {
-                UserMap.add(new UserEntity(userId, account, friendStatus, realName, nickName, remarkName));
-            }
-        }
+    JSONObject userBaseInfo = treeEnergy.optJSONObject("userBaseInfo");
+    if (userBaseInfo == null) {
+        Log.runtime(TAG, "[updateUserMap] userBaseInfo is null");
+        return;
+    }
+
+    Log.runtime(TAG, "[updateUserMap] userBaseInfo 内容: " + userBaseInfo.toString());
+
+    String userId = userBaseInfo.optString("userId", "");
+    String account = userBaseInfo.optString("loginId", "");
+    String realName = String.valueOf(userBaseInfo.opt("realName")); // 有可能是 boolean，强转字符串
+    String nickName = userBaseInfo.optString("displayName", "");
+    Integer friendStatus = 0; // PK 好友没有好友状态，用默认值
+    String remarkName = "";
+
+    Log.runtime(TAG, "[updateUserMap] 准备添加用户：userId=" + userId + ", nickName=" + nickName + ", realName=" + realName + ", account=" + account);
+
+    if (!StringUtil.isEmpty(userId)) {
+        UserMap.add(new UserEntity(userId, account, friendStatus, realName, nickName, remarkName));
+        Log.runtime(TAG, "[updateUserMap] 添加用户成功：" + userId);
+    } else {
+        Log.runtime(TAG, "[updateUserMap] userId 为空，跳过添加");
     }
 }
+
 
     /**
      * 更新好友主页信息
