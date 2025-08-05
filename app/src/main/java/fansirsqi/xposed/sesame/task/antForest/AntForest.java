@@ -801,18 +801,30 @@ private void updateUserMapFromFriendHome(JSONObject friendHomeObj) {
     if (friendHomeObj == null) return;
 
     JSONObject treeEnergy = friendHomeObj.optJSONObject("treeEnergy");
-    if (treeEnergy != null) {
-        JSONObject userEnergy = treeEnergy.optJSONObject("userEnergy");
-        if (userEnergy != null) {
-            String uid = userEnergy.optString("userId");
-            String displayName = userEnergy.optString("displayName", "");
-            if (!StringUtil.isEmpty(uid)) {
-                // 使用默认值补齐参数
-                UserMap.add(new UserEntity(uid, "", null, displayName, "", ""));
-            }
+    if (treeEnergy == null) return;
+
+    // 优先从 userBaseInfo 中取名称
+    JSONObject baseInfo = treeEnergy.optJSONObject("userBaseInfo");
+    if (baseInfo != null) {
+        String uid = baseInfo.optString("userId");
+        String displayName = baseInfo.optString("displayName", "");
+        if (!StringUtil.isEmpty(uid)) {
+            UserMap.add(new UserEntity(uid, displayName));
+            return;
+        }
+    }
+
+    // 兼容旧结构：从 userEnergy 中取
+    JSONObject userEnergy = treeEnergy.optJSONObject("userEnergy");
+    if (userEnergy != null) {
+        String uid = userEnergy.optString("userId");
+        String displayName = userEnergy.optString("displayName", "");
+        if (!StringUtil.isEmpty(uid)) {
+            UserMap.add(new UserEntity(uid, displayName));
         }
     }
 }
+
 
     /**
      * 更新好友主页信息
