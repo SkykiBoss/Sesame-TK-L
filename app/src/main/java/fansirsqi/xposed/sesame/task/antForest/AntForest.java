@@ -1123,20 +1123,6 @@ public class AntForest extends ModelTask {
     }
 
     /**
- * 收取指定能量球
- */
-private void collectEnergyBalls(String userId, List<Long> bubbleIds) {
-    if (bubbleIds == null || bubbleIds.isEmpty()) return;
-
-    try {
-        String result = AntForestRpcCall.collectEnergy(userId, bubbleIds);
-        Log.record(TAG, "收集[" + UserMap.getMaskName(userId) + "]能量球: " + bubbleIds + " => 结果: " + result);
-    } catch (Exception e) {
-        Log.printStackTrace(TAG, "收集[" + UserMap.getMaskName(userId) + "]能量球异常", e);
-    }
-}
-
-    /**
      * 处理单个好友 - 收能量
      *
      * @param friendObj 好友的JSON对象
@@ -1178,8 +1164,9 @@ private void collectEnergyBalls(String userId, List<Long> bubbleIds) {
             extractBubbleInfo(userHomeObj, serverTime, availableBubbles, waitingBubbles, userId);
 
             if (!availableBubbles.isEmpty()) {
-                collectEnergyBalls(userId, availableBubbles);
+               collectAvailableEnergy(userId, userHomeObj, availableBubbles); 
             }
+
             if (!waitingBubbles.isEmpty()) {
                 scheduleWaitingBubbles(userId, waitingBubbles);
             }
