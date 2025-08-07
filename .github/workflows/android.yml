@@ -2,12 +2,6 @@ name: 📦构建普通版本
 run-name: 📦 ${{ github.actor }} @ 构建普通版本
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-  release:
-    types: [published]
   workflow_dispatch:
 
 jobs:
