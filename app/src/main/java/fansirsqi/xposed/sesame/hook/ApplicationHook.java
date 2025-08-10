@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -59,11 +58,11 @@ import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.util.AssetUtil;
 import fansirsqi.xposed.sesame.util.Detector;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fansirsqi.xposed.sesame.util.Notify;
 import fansirsqi.xposed.sesame.util.PermissionUtil;
 import fansirsqi.xposed.sesame.util.StringUtil;
 import fansirsqi.xposed.sesame.util.TimeUtil;
+import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fi.iki.elonen.NanoHTTPD;
 import lombok.Getter;
 
@@ -551,7 +550,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                     HookUtil.INSTANCE.hookDefaultBridgeCallback(appLloadPackageParam);
                 }
                 Model.bootAllModel(classLoader);
-                Status.load();
+                Status.load(userId);
                 DataCache.INSTANCE.load();
                 updateDay(userId);
                 FriendWatch.load(userId);
