@@ -1318,7 +1318,7 @@ public class AntFarm extends ModelTask {
      */
     private void doFarmTasks() {
         try {
-            List<String> taskList = new ArrayList<>(List.of("HEART_DONATION_ADVANCED_FOOD_V2","HEART_DONATE","SHANGOU_xiadan","OFFLINE_PAY"));
+            List<String> taskList = new ArrayList<>(List.of("HEART_DONATION_ADVANCED_FOOD_V2","HEART_DONATE","SHANGOU_xiadan","OFFLINE_PAY","ONLINE_PAY"));
             List<String> cachedList = DataCache.INSTANCE.getData("farmCompletedTaskSet", taskList);
             taskList = new ArrayList<>(new LinkedHashSet<>(cachedList)); // 去重可选
             JSONObject jo = new JSONObject(AntFarmRpcCall.listFarmTask());
