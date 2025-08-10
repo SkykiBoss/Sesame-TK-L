@@ -2,7 +2,6 @@ name: 📦构建测试版本
 run-name: 📦 ${{ github.actor }} @ 构建测试版本
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:
