@@ -1323,7 +1323,7 @@ public class AntFarm extends ModelTask {
                     //去买秋天第一杯奶茶
                     "SHANGOU_xiadan",
                     //到店付款,线上支付
-                    "OFFLINE_PAY",
+                    "OFFLINE_PAY"
             ));
             TypeReference<Set<String>> typeRef = new TypeReference<>() {
             };
