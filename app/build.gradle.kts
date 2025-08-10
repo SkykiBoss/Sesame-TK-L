@@ -14,7 +14,7 @@ android {
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId = "fansirsqi.xposed.sesame"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
 
         if (!System.getenv("CI").toBoolean()) {
@@ -222,6 +222,9 @@ dependencies {
     annotationProcessor(libs.lombok)
     implementation(libs.okhttp)
     implementation(libs.dexkit)
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.+")
+    implementation("com.tencent:mmkv:2.2.2")
+
     coreLibraryDesugaring(libs.desugar)
     add("normalImplementation", libs.jackson.core)
     add("normalImplementation", libs.jackson.databind)
