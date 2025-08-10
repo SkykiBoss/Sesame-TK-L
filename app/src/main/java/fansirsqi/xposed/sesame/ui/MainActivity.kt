@@ -13,7 +13,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
@@ -27,6 +26,7 @@ import fansirsqi.xposed.sesame.data.General
 import fansirsqi.xposed.sesame.data.RunType
 import fansirsqi.xposed.sesame.data.UIConfig
 import fansirsqi.xposed.sesame.data.ViewAppInfo
+import fansirsqi.xposed.sesame.data.ViewAppInfo.verifyId
 import fansirsqi.xposed.sesame.entity.FriendWatch
 import fansirsqi.xposed.sesame.entity.UserEntity
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc
@@ -60,10 +60,11 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ToastUtil.init(this) // 初始化全局 Context
+
         hasPermissions = PermissionUtil.checkOrRequestFilePermissions(this)
         if (!hasPermissions) {
             Toast.makeText(this, "未获取文件读写权限", Toast.LENGTH_LONG).show()
-            finish()
+            finish() // 如果权限未获取，终止当前 Activity
             return
         }
         setContentView(R.layout.activity_main)
@@ -71,16 +72,13 @@ class MainActivity : BaseActivity() {
         val deviceInfo: ComposeView = findViewById(R.id.device_info)
         deviceInfo.setContent {
             val customColorScheme = lightColorScheme(
-                primary = Color(0xFF3F51B5),
-                onPrimary = Color.White,
-                background = Color(0xFFF5F5F5),
-                onBackground = Color.Black
+                primary = Color(0xFF3F51B5), onPrimary = Color.White, background = Color(0xFFF5F5F5), onBackground = Color.Black
             )
             MaterialTheme(colorScheme = customColorScheme) {
-                DeviceInfoCard(DeviceInfoUtil.getDeviceInfo(this@MainActivity))
+                DeviceInfoCard(DeviceInfoUtil.showInfo(verifyId))
             }
         }
-
+        // 获取并设置一言句子
         try {
             if (!AssetUtil.copySoFileToStorage(this, AssetUtil.checkerDestFile)) {
                 Log.error(TAG, "checker file copy failed")
@@ -191,7 +189,7 @@ class MainActivity : BaseActivity() {
             val isEnabled = state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             menu.add(0, 1, 1, R.string.hide_the_application_icon)
                 .setCheckable(true).isChecked = !isEnabled
-            
+
             menu.add(0, 2, 2, R.string.friend_watch)
             menu.add(0, 3, 3, R.string.other_log)
             menu.add(0, 4, 4, R.string.view_error_log_file)
