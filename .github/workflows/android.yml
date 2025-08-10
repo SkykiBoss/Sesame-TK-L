@@ -1,5 +1,5 @@
-name: 📦构建026普通版本
-run-name: 📦 ${{ github.actor }} @ 构建026普通版本
+name: 📦构建027伪普通版本
+run-name: 📦 ${{ github.actor }} @ 构建027伪普通版本
 
 on:
   workflow_dispatch:
@@ -137,17 +137,10 @@ jobs:
           to: ${{ secrets.TG_CHAT_ID }}
           token: ${{ secrets.TG_BOT_TOKEN }}
           message: |
-            📦 *026新版本 ${{ steps.extract_info.outputs.version }} Build!*
+            📦 *027伪新版本 ${{ steps.extract_info.outputs.version }} Build!*
 
-            - Files: 
-              - Normal: `${{ steps.extract_info.outputs.normal_file }}`
-              - Compatible: `${{ steps.extract_info.outputs.compatible_file }}`
             - Branch: `${{ github.ref_name }}`
             - Triggered by: `${{ github.actor }}`
-
-            *下载说明:*
-              * Normal 为正常版本,适用于`Android 8.0`及以上的系统*
-              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`*
 
             ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
           format: markdown
@@ -187,7 +180,7 @@ jobs:
           append_body: true
           generate_release_notes: true
           body: |
-            ## ✨026版本更新了啥？
+            ## ✨027伪版本更新了啥？
 
             ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
             > ## 下载说明
