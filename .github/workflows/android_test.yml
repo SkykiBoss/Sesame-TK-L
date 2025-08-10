@@ -2,6 +2,12 @@ name: 📦构建测试版本
 run-name: 📦 ${{ github.actor }} @ 构建测试版本
 
 on:
+  push:
+    branches: ["develop"]
+  pull_request:
+    branches: ["develop"]
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
