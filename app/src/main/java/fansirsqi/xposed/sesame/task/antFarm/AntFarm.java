@@ -1319,8 +1319,14 @@ public class AntFarm extends ModelTask {
     private void doFarmTasks() {
         try {
             List<String> taskList = new ArrayList<>(List.of(
+                    //香草芒果冰糕任务
                     "HEART_DONATION_ADVANCED_FOOD_V2",
-                    "HEART_DONATE"
+                    //爱心捐赠
+                    "HEART_DONATE",
+                    //去买秋天第一杯奶茶
+                    "SHANGOU_xiadan",
+                    //到店付款,线上支付
+                    "OFFLINE_PAY",
             ));
             List<String> cachedList = DataCache.INSTANCE.getData("farmCompletedTaskSet", taskList);
             taskList = new ArrayList<>(new LinkedHashSet<>(cachedList)); // 去重可选
