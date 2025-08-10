@@ -24,12 +24,12 @@ import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.data.Status;
 import fansirsqi.xposed.sesame.util.StringUtil;
 import fansirsqi.xposed.sesame.util.TimeUtil;
+import fansirsqi.xposed.sesame.util.maps.UserMap;
 /**
  * @author Constanline
  * @since 2023/08/22
@@ -52,7 +52,7 @@ public class AntStall extends ModelTask {
         // 添加首页
         taskTypeList.add("tianjiashouye");
         // 【木兰市集】逛精选好物
-        taskTypeList.add("ANTSTALL_XLIGHT_VARIABLE_AWARD");
+//        taskTypeList.add("ANTSTALL_XLIGHT_VARIABLE_AWARD");
         // 去饿了么果园逛一逛
         taskTypeList.add("ANTSTALL_ELEME_VISIT");
         // 去点淘赚元宝提现

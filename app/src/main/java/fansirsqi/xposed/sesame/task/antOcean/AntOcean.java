@@ -32,9 +32,9 @@ import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.maps.BeachMap;
 import fansirsqi.xposed.sesame.util.maps.IdMapManager;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.util.StringUtil;
+import fansirsqi.xposed.sesame.util.maps.UserMap;
 import lombok.Getter;
 
 /**

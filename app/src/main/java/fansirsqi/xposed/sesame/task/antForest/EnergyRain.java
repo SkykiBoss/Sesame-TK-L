@@ -10,8 +10,8 @@ import java.util.Set;
 import fansirsqi.xposed.sesame.hook.Toast;
 import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fansirsqi.xposed.sesame.util.ResChecker;
+import fansirsqi.xposed.sesame.util.maps.UserMap;
 
 public class EnergyRain {
     private static final String TAG = EnergyRain.class.getSimpleName();
