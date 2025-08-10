@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashSet;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
@@ -28,6 +29,7 @@ import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.data.Status;
 import fansirsqi.xposed.sesame.util.TimeUtil;
 import fansirsqi.xposed.sesame.util.maps.UserMap;
+import fansirsqi.xposed.sesame.entity.AlipayUser;
 
 public class AntSports extends ModelTask {
     private static final String TAG = AntSports.class.getSimpleName();
