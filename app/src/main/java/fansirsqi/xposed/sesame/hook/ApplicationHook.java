@@ -165,13 +165,13 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     private void loadNativeLibs(Context context, File soFile) {
         try {
-            String soPath = context.getApplicationInfo().dataDir + File.separator + "lib" + File.separator + soFile.getName();
-            if (AssetUtil.INSTANCE.copyDtorageSoFileToPrivateDir(context, soFile)) {
-                System.load(soPath);
+            File finalSoFile = AssetUtil.INSTANCE.copyStorageSoFileToPrivateDir(context, soFile);
+            if (finalSoFile != null) {
+                System.load(finalSoFile.getAbsolutePath());
+                Log.runtime(TAG, "Loading " + soFile.getName() + " from :" + finalSoFile.getAbsolutePath());
             } else {
-                Detector.INSTANCE.loadLibrary("checker");
+                Detector.INSTANCE.loadLibrary(soFile.getName().replace(".so", "").replace("lib", ""));
             }
-            Log.runtime(TAG, "Loading " + soFile.getName() + " from :" + soPath);
         } catch (Exception e) {
             Log.error(TAG, "载入so库失败！！");
             Log.printStackTrace(e);
@@ -183,7 +183,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         if (General.MODULE_PACKAGE_NAME.equals(loadPackageParam.packageName)) {
             try {
                 Class<?> applicationClass = loadPackageParam.classLoader.loadClass("android.app.Application");
-
                 XposedHelpers.findAndHookMethod(applicationClass, "onCreate", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -203,6 +202,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        mainHandler = new Handler(Looper.getMainLooper());
                         appContext = (Context) param.args[0];
                         PackageInfo pInfo = appContext.getPackageManager().getPackageInfo(appContext.getPackageName(), 0);
                         assert pInfo.versionName != null;
@@ -297,8 +297,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                     Log.runtime(TAG, "hook dexkit successfully");
                                 }
                                 service = appService;
-                                mainHandler = new Handler(Looper.getMainLooper());
-                                AtomicReference<String> UserId = new AtomicReference<>();
                                 mainTask = BaseTask.newInstance("MAIN_TASK", () -> {
                                     try {
                                         if (!init) {
@@ -313,29 +311,24 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                         long currentTime = System.currentTimeMillis();
                                         if (lastExecTime + 2000 > currentTime) {
                                             Log.record(TAG, "执行间隔较短，跳过执行");
-                                            execDelayedHandler(BaseModel.getCheckInterval().getValue());
                                             return;
                                         }
                                         String currentUid = UserMap.getCurrentUid();
                                         String targetUid = getUserId();
-
                                         if (targetUid == null || !targetUid.equals(currentUid)) {
                                             Log.record(TAG, "用户切换或为空，重新登录");
                                             reLogin();
                                             return;
                                         }
                                         lastExecTime = currentTime; // 更新最后执行时间
-
                                         ModelTask.startAllTask(false);
                                         scheduleNextExecution(lastExecTime);
-                                        UserId.set(targetUid);
                                     } catch (Exception e) {
                                         Log.record(TAG, "❌执行异常");
                                         Log.printStackTrace(TAG, e);
                                     }
                                 });
                                 registerBroadcastReceiver(appService);
-                                FriendWatch.load(UserId.get());
                                 dayCalendar = Calendar.getInstance();
                                 if (initHandler(true)) {
                                     init = true;
@@ -344,6 +337,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         }
 
                 );
+                execDelayedHandler(BaseModel.getCheckInterval().getValue());
                 Log.runtime(TAG, "hook service onCreate successfully");
             } catch (Throwable t) {
                 Log.runtime(TAG, "hook service onCreate err");
@@ -560,7 +554,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 Status.load();
                 DataCache.INSTANCE.load();
                 updateDay(userId);
-                String successMsg = "芝麻粒-TK 加载成功✨";
+                FriendWatch.load(userId);
+                String successMsg = "芝麻粒-TK 加载成功✨当前版本为ALLG编译~";
                 Log.record(successMsg);
                 Toast.show(successMsg);
             }
