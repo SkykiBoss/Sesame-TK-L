@@ -34,7 +34,7 @@ public class ModelOrder {
             AntStall.class,//蚂蚁新村
             GreenFinance.class,//绿色经营
 //            AntBookRead.class,//读书
-//            ConsumeGold.class,//消费金
+            ConsumeGold.class,//消费金
 //            OmegakoiTown.class,//小镇
             AnswerAI.class,//AI答题
     };
