@@ -111,24 +111,59 @@ jobs:
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"
 
-      - name: Post to channel
+            - name: Post to channel
         if: github.ref == 'refs/heads/main'
         env:
           CHANNEL_ID: ${{ secrets.TG_CHAT_ID }}
           BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           NORMAL_FILE: ${{ steps.extract_apks.outputs.signed_normal }}
           COMPATIBLE_FILE: ${{ steps.extract_apks.outputs.signed_compatible }}
-          COMMIT_MESSAGE: |+
-            New push to github\!
+          COMMIT_MESSAGE: |
+            New push to github!
             ```
             ${{ github.event.head_commit.message }}
-            ```by `${{ github.event.head_commit.author.name }}`
+            ```
+            by `${{ github.event.head_commit.author.name }}`
             See commit detail [here](${{ github.event.head_commit.url }})
         run: |
-          ESCAPED=$(python3 -c 'import json, os, urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))')
-          curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22:%22document%22,%20%22media%22:%22attach://normal.apk%22,%22parse_mode%22:%22MarkdownV2%22,%22caption%22:${ESCAPED}%7D,%20%7B%22type%22:%22document%22,%22media%22:%22attach://compatible.apk%22%7D%5D" \
+          # 转义 MarkdownV2 特殊字符
+          ESCAPED_MESSAGE=$(python3 - <<'PY'
+import os
+text = os.environ["COMMIT_MESSAGE"]
+for ch in r"_*[]()~`>#+-=|{}.!" :
+    text = text.replace(ch, "\\" + ch)
+print(text)
+PY
+)
+
+          # 构造 media 数组 JSON
+          MEDIA_JSON=$(python3 - <<'PY'
+import os, json
+msg = os.environ["ESCAPED_MESSAGE"]
+media = [
+    {
+        "type": "document",
+        "media": "attach://normal.apk",
+        "parse_mode": "MarkdownV2",
+        "caption": msg
+    },
+    {
+        "type": "document",
+        "media": "attach://compatible.apk"
+    }
+]
+print(json.dumps(media, ensure_ascii=False))
+PY
+)
+
+          # URL 编码整个 JSON
+          MEDIA_URLENCODED=$(python3 -c "import urllib.parse,os; print(urllib.parse.quote(os.environ['MEDIA_JSON']))" MEDIA_JSON="$MEDIA_JSON")
+
+          # 调用 Telegram API
+          curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=${MEDIA_URLENCODED}" \
             -F "normal.apk=@${NORMAL_FILE}" \
             -F "compatible.apk=@${COMPATIBLE_FILE}"
+
       
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
