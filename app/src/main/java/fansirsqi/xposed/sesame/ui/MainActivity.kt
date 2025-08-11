@@ -22,6 +22,7 @@ import androidx.core.util.Consumer
 import androidx.lifecycle.lifecycleScope
 import fansirsqi.xposed.sesame.BuildConfig
 import fansirsqi.xposed.sesame.R
+import fansirsqi.xposed.sesame.newui.WatermarkView
 import fansirsqi.xposed.sesame.data.General
 import fansirsqi.xposed.sesame.data.RunType
 import fansirsqi.xposed.sesame.data.UIConfig
@@ -70,6 +71,7 @@ class MainActivity : BaseActivity() {
         setContentView(R.layout.activity_main)
         oneWord = findViewById(R.id.one_word)
         val deviceInfo: ComposeView = findViewById(R.id.device_info)
+        val v = WatermarkView.install(this)
         deviceInfo.setContent {
             val customColorScheme = lightColorScheme(
                 primary = Color(0xFF3F51B5), onPrimary = Color.White, background = Color(0xFFF5F5F5), onBackground = Color.Black
