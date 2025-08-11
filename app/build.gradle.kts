@@ -1,5 +1,7 @@
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 plugins {
     alias(libs.plugins.android.application)
@@ -10,7 +12,21 @@ plugins {
 android {
     namespace = "fansirsqi.xposed.sesame"
     compileSdk = 36
-
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+    val gitCommitCount: Int = runCatching {
+        val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
+            .redirectErrorStream(true)
+            .start()
+        val output = process.inputStream.bufferedReader().use { it.readText().trim() }
+        output.toInt()
+    }.getOrElse {
+        println("获取 git 提交数失败: ${it.message}")
+        1
+    }
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId = "fansirsqi.xposed.sesame"
@@ -23,11 +39,6 @@ android {
             }
         }
 
-        // 版本配置
-        val major = 0
-        val minor = 2
-        val patch = 6
-        val buildTag = "alpha"
 
         val buildDate = SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).apply {
             timeZone = TimeZone.getTimeZone("GMT+8")
@@ -43,32 +54,15 @@ android {
             "0000"
         }
 
-        val gitCommitCount = try {
-            val process = Runtime.getRuntime().exec(arrayOf("git", "rev-list", "--count", "HEAD"))
-            val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
-            process.waitFor()
-            if (process.exitValue() == 0) {
-                output.toInt()
-            } else {
-                println("Git error: ${process.errorStream.bufferedReader().readText()}")
-                1
-            }
-        } catch (_: Exception) {
-            1
-        }
-
         versionCode = gitCommitCount
-        versionName = if (buildTag.contains("alpha") || buildTag.contains("beta")) {
-            "v$major.$minor.$patch-$buildTag.$buildTargetCode"
-        } else {
-            "v$major.$minor.$patch-$buildTag"
-        }
+        val buildTag = "beta"
+        versionName = "v0.2.6.rc$gitCommitCount-$buildTag"
 
         buildConfigField("String", "BUILD_DATE", "\"$buildDate\"")
         buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
         buildConfigField("String", "BUILD_NUMBER", "\"$buildTargetCode\"")
         buildConfigField("String", "BUILD_TAG", "\"$buildTag\"")
-        buildConfigField("String", "VERSION", "\"v$major.$minor.$patch\"")
+        buildConfigField("String", "VERSION", "\"$versionName\"")
 
         ndk {
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
@@ -86,6 +80,7 @@ android {
         compose = true
     }
 
+
     flavorDimensions += "default"
     productFlavors {
         create("normal") {
@@ -97,13 +92,12 @@ android {
             extra.set("applicationType", "Compatible")
         }
     }
-
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
+        // 全局默认设置
+        isCoreLibraryDesugaringEnabled = true // 启用脱糖
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
     kotlin {
         compilerOptions {
             jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
@@ -123,6 +117,7 @@ android {
                     }
                 }
             }
+
             "compatible" -> {
                 compileOptions {
                     sourceCompatibility = JavaVersion.VERSION_11
@@ -138,7 +133,8 @@ android {
     }
 
     signingConfigs {
-        getByName("debug") {}
+        getByName("debug") {
+        }
     }
 
     buildTypes {
@@ -164,7 +160,6 @@ android {
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }
-
     val cmakeFile = file("src/main/cpp/CMakeLists.txt")
     if (!System.getenv("CI").toBoolean() && cmakeFile.exists()) {
         externalNativeBuild {
@@ -177,20 +172,14 @@ android {
     }
 
     applicationVariants.all {
-    val variant = this
-    variant.outputs.all {
-        val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
-        val dateCode = try {
-            variant.versionName.substringAfterLast("-").substring(0, 6)
-        } catch (_: Exception) {
-            "000000"
+        val variant = this
+        variant.outputs.all {
+            val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
+            val fileName = "Sesame-TK-$flavorName-${variant.versionName}.apk"
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
-        val fileName = "Sesame-TK-$flavorName-$dateCode-ALLG.apk"
-        (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
     }
 }
-}
-
 
 dependencies {
     implementation(libs.ui.tooling.preview.android)
@@ -201,13 +190,20 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
+
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("org.nanohttpd:nanohttpd:2.3.1")
+
+
     implementation(libs.androidx.constraintlayout)
+
     implementation(libs.activity.compose)
+
     implementation(libs.core.ktx)
     implementation(libs.kotlin.stdlib)
     implementation(libs.slf4j.api)
@@ -226,9 +222,11 @@ dependencies {
     implementation("com.tencent:mmkv:2.2.2")
 
     coreLibraryDesugaring(libs.desugar)
+
     add("normalImplementation", libs.jackson.core)
     add("normalImplementation", libs.jackson.databind)
     add("normalImplementation", libs.jackson.annotations)
+
     add("compatibleImplementation", libs.jackson.core.compatible)
     add("compatibleImplementation", libs.jackson.databind.compatible)
     add("compatibleImplementation", libs.jackson.annotations.compatible)
