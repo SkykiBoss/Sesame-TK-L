@@ -1,4 +1,5 @@
-name: Android CI
+name: 📦构建027官方版本
+run-name: 📦 ${{ github.actor }} @ 构建027官方版本
 
 on:
   workflow_dispatch:
