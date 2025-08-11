@@ -227,11 +227,14 @@ public class AntSports extends ModelTask {
     // 运动
     private void sportsTasks() {
         try {
+            Log.record(TAG, "开始执行运动任务 sportsTasks()");
             sportsCheck_in();
             JSONObject jo = new JSONObject(AntSportsRpcCall.queryCoinTaskPanel());
+            Log.record(TAG, "查询任务面板接口返回: " + jo.toString());
             if (jo.optBoolean("success")) {
                 JSONObject data = jo.getJSONObject("data");
                 JSONArray taskList = data.getJSONArray("taskList");
+                Log.record(TAG, "任务列表长度: " + taskList.length());
                 for (int i = 0; i < taskList.length(); i++) {
                     JSONObject taskDetail = taskList.getJSONObject(i);
                     String taskId = taskDetail.getString("taskId");
@@ -239,24 +242,40 @@ public class AntSports extends ModelTask {
                     String prizeAmount = taskDetail.getString("prizeAmount");
                     String taskStatus = taskDetail.getString("taskStatus");
                     int currentNum = taskDetail.getInt("currentNum");
-                    // 要完成的次数
                     int limitConfigNum = taskDetail.getInt("limitConfigNum") - currentNum;
-                    if (taskStatus.equals("HAS_RECEIVED"))
-                        return;
+
+                    Log.record(TAG, String.format("任务[%d]: %s, 状态: %s, 已完成次数: %d, 剩余次数: %d, 奖励: %s",
+                            i, taskName, taskStatus, currentNum, limitConfigNum, prizeAmount));
+
+                    if (taskStatus.equals("HAS_RECEIVED")) {
+                        Log.record(TAG, "任务 " + taskName + " 已领取，跳过");
+                        continue; // 注意改成continue，避免跳出整个循环
+                    }
+
                     for (int i1 = 0; i1 < limitConfigNum; i1++) {
+                        Log.record(TAG, "开始完成任务: " + taskName + " 第 " + (i1 + 1) + "/" + limitConfigNum);
                         jo = new JSONObject(AntSportsRpcCall.completeExerciseTasks(taskId));
+                        Log.record(TAG, "完成任务接口返回: " + jo.toString());
+
                         if (jo.optBoolean("success")) {
-                            Log.record(TAG, "做任务得运动币👯[完成任务：" + taskName + "，得" + prizeAmount + "💰]");
+                            Log.record(TAG, "做任务得能量👯[完成任务：" + taskName + "，得" + prizeAmount + "能量]");
                             receiveCoinAsset();
+                        } else {
+                            Log.record(TAG, "完成任务失败，接口返回: " + jo.toString());
+                            break; // 遇到失败退出当前任务的循环，避免无效请求
                         }
+
                         if (limitConfigNum > 1)
                             GlobalThreadPools.sleep(10000);
                         else
                             GlobalThreadPools.sleep(1000);
                     }
                 }
+            } else {
+                Log.record(TAG, "查询任务面板接口返回失败: " + jo.toString());
             }
         } catch (Exception e) {
+            Log.record(TAG, "sportsTasks() 出现异常:");
             Log.printStackTrace(e);
         }
     }
