@@ -222,7 +222,7 @@ dependencies {
     annotationProcessor(libs.lombok)
     implementation(libs.okhttp)
     implementation(libs.dexkit)
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.+")
+    implementation(libs.jackson.kotlin)
     implementation("com.tencent:mmkv:2.2.2")
 
     coreLibraryDesugaring(libs.desugar)
