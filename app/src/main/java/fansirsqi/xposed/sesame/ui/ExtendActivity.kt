@@ -12,6 +12,7 @@ import fansirsqi.xposed.sesame.BuildConfig
 import fansirsqi.xposed.sesame.R
 import fansirsqi.xposed.sesame.data.DataCache
 import fansirsqi.xposed.sesame.entity.ExtendFunctionItem
+import fansirsqi.xposed.sesame.newui.WatermarkView
 import fansirsqi.xposed.sesame.ui.widget.ExtendFunctionAdapter
 import fansirsqi.xposed.sesame.util.Detector.getApiUrl
 import fansirsqi.xposed.sesame.util.FansirsqiUtil
@@ -38,9 +39,9 @@ class ExtendActivity : BaseActivity() {
         setContentView(R.layout.activity_extend) // 设置布局文件
         debugTips = getString(R.string.debug_tips)
         baseTitle = getString(R.string.extended_func)
-
         setupRecyclerView()
         populateExtendFunctions()
+        WatermarkView.install(this)
     }
 
     private fun setupRecyclerView() {
