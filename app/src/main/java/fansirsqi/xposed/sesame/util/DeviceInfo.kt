@@ -1,11 +1,9 @@
 package fansirsqi.xposed.sesame.util
 
-import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
-import android.provider.Settings
 import androidx.compose.foundation.clickable
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
