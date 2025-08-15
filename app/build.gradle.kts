@@ -19,11 +19,11 @@ android {
 
         if (!System.getenv("CI").toBoolean()) {
             ndk {
-                abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
             }
         }
 
-        // 版本号信息
+        // 版本配置
         val major = 0
         val minor = 2
         val patch = 6
@@ -37,32 +37,49 @@ android {
             timeZone = TimeZone.getTimeZone("GMT+8")
         }.format(Date())
 
-        val buildTargetCode = runCatching {
-            "${buildDate.replace("-", ".")}.${buildTime.replace(":", ".")}"
-        }.getOrDefault("0000")
+        val buildTargetCode = try {
+            buildDate.replace("-",".")+"."+buildTime.replace(":",".")
+        } catch (_: Exception) {
+            "0000"
+        }
 
-        val gitCommitCount = System.getenv("GIT_COMMIT_COUNT")?.toIntOrNull() ?: runCatching {
+        val gitCommitCount = try {
             val process = Runtime.getRuntime().exec(arrayOf("git", "rev-list", "--count", "HEAD"))
-            val output = process.inputStream.bufferedReader().readText().trim()
+            val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
             process.waitFor()
-            if (process.exitValue() == 0) output.toInt() else 1
-        }.getOrDefault(1)
+            if (process.exitValue() == 0) {
+                output.toInt()
+            } else {
+                val error = process.errorStream.bufferedReader().use { it.readText() }
+                println("Git error: $error")
+                "1".toInt()
+            }
+        } catch (_: Exception) {
+            "1".toInt()
+        }
+
 
         versionCode = gitCommitCount
         versionName = if (buildTag.contains("alpha") || buildTag.contains("beta")) {
-            "v$major.$minor.$patch-$buildTag.$buildTargetCode"
+            "$major.$minor.$patch-$buildTag.$buildTargetCode"
         } else {
-            "v$major.$minor.$patch-$buildTag"
+            "$major.$minor.$patch-$buildTag"
         }
 
         buildConfigField("String", "BUILD_DATE", "\"$buildDate\"")
         buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
         buildConfigField("String", "BUILD_NUMBER", "\"$buildTargetCode\"")
         buildConfigField("String", "BUILD_TAG", "\"$buildTag\"")
-        buildConfigField("String", "VERSION", "\"v$major.$minor.$patch\"")
+        buildConfigField("String", "VERSION", "\"$versionName\"")
+
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+        }
 
         testOptions {
-            unitTests.all { it.enabled = false }
+            unitTests.all {
+                it.enabled = false
+            }
         }
     }
 
@@ -70,6 +87,7 @@ android {
         buildConfig = true
         compose = true
     }
+
 
     flavorDimensions += "default"
     productFlavors {
@@ -82,20 +100,18 @@ android {
             extra.set("applicationType", "Compatible")
         }
     }
-
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
+        // 全局默认设置
+        isCoreLibraryDesugaringEnabled = true // 启用脱糖
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
     kotlin {
         compilerOptions {
             jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
         }
     }
 
-    // flavor-specific 编译配置
     productFlavors.all {
         when (name) {
             "normal" -> {
@@ -104,7 +120,9 @@ android {
                     targetCompatibility = JavaVersion.VERSION_17
                 }
                 kotlin {
-                    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 }
+                    compilerOptions {
+                        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+                    }
                 }
             }
             "compatible" -> {
@@ -113,14 +131,17 @@ android {
                     targetCompatibility = JavaVersion.VERSION_11
                 }
                 kotlin {
-                    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11 }
+                    compilerOptions {
+                        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
+                    }
                 }
             }
         }
     }
 
     signingConfigs {
-        getByName("debug") {}
+        getByName("debug") {
+        }
     }
 
     buildTypes {
@@ -146,7 +167,6 @@ android {
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }
-
     val cmakeFile = file("src/main/cpp/CMakeLists.txt")
     if (!System.getenv("CI").toBoolean() && cmakeFile.exists()) {
         externalNativeBuild {
@@ -162,33 +182,35 @@ android {
         val variant = this
         variant.outputs.all {
             val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
-            val dateCode = runCatching {
-                variant.versionName.substringAfterLast("-").substring(0, 6)
-            }.getOrDefault("000000")
-            val fileName = "Sesame-TK-$flavorName-$dateCode-ALLG.apk"
+            val fileName = "Sesame-TK-$flavorName-${variant.versionName}.apk"
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
     }
 }
 
 dependencies {
-    // Compose BOM 控制所有 Compose 版本
+    implementation(libs.ui.tooling.preview.android)
     val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
     implementation(composeBom)
-    androidTestImplementation(composeBom)
     testImplementation(composeBom)
-
+    androidTestImplementation(composeBom)
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
+
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation("androidx.compose.runtime:runtime-livedata")
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
 
-    // 其他依赖
-    implementation(libs.ui.tooling.preview.android)
-    implementation(libs.androidx.constraintlayout)
+
+    implementation (libs.androidx.constraintlayout)
+
     implementation(libs.activity.compose)
+
     implementation(libs.core.ktx)
     implementation(libs.kotlin.stdlib)
     implementation(libs.slf4j.api)
@@ -198,25 +220,21 @@ dependencies {
     implementation(libs.viewpager2)
     implementation(libs.material)
     implementation(libs.webkit)
-    implementation(libs.lombok)
+    compileOnly(libs.xposed.api)
+    compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     implementation(libs.okhttp)
     implementation(libs.dexkit)
     implementation(libs.jackson.kotlin)
     implementation("com.tencent:mmkv:2.2.2")
-    implementation("org.nanohttpd:nanohttpd:2.3.1")
 
     coreLibraryDesugaring(libs.desugar)
 
-    // Flavor 特定依赖
     add("normalImplementation", libs.jackson.core)
     add("normalImplementation", libs.jackson.databind)
     add("normalImplementation", libs.jackson.annotations)
-    add("normalCompileOnly", libs.libxposed.api)
-    add("normalImplementation", libs.libxposed.service)
 
     add("compatibleImplementation", libs.jackson.core.compatible)
     add("compatibleImplementation", libs.jackson.databind.compatible)
     add("compatibleImplementation", libs.jackson.annotations.compatible)
-    add("compatibleCompileOnly", libs.xposed.api)
 }
