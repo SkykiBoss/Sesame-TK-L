@@ -37,7 +37,7 @@ public class MessageUtil {
                 if (jo.has("memo")) {
                     printErrorMessage(tag, jo, "memo");
                 } else {
-                    Log.other(tag, jo.toString());
+                    Log.error(tag, jo.toString());
                 }
                 return false;
             }

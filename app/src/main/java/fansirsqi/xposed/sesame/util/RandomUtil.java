@@ -1,7 +1,6 @@
 package fansirsqi.xposed.sesame.util;
 
 import java.util.Random;
-import java.util.UUID;
 
 /**
  * 随机数工具类，提供生成随机数和随机字符串的方法。
@@ -95,7 +94,5 @@ public class RandomUtil {
         return "_" + System.currentTimeMillis() + "_" + RandomUtil.getRandomString(8);
     }
 
-    public static String getRandomUUID() {
-        return UUID.randomUUID().toString();
-    }
+
 }

@@ -2,9 +2,7 @@ package fansirsqi.xposed.sesame.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+
 import fansirsqi.xposed.sesame.BuildConfig;
 import fansirsqi.xposed.sesame.model.BaseModel;
 
@@ -13,8 +11,6 @@ import fansirsqi.xposed.sesame.model.BaseModel;
  */
 public class Log {
     private static final String TAG = "";
-
-    // 日志实例
     private static final Logger RUNTIME_LOGGER;
     private static final Logger SYSTEM_LOGGER;
     private static final Logger RECORD_LOGGER;
@@ -25,12 +21,8 @@ public class Log {
     private static final Logger ERROR_LOGGER;
     private static final Logger CAPTURE_LOGGER;
 
-    // ThreadLocal 缓存 SimpleDateFormat
-    public static final ThreadLocal<SimpleDateFormat> DATE_FORMAT_THREAD_LOCAL =
-            ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()));
-
     static {
-        Logback.configureLogbackDirectly();  // 你的 Logback 初始化
+        Logback.configureLogbackDirectly();
         RUNTIME_LOGGER = LoggerFactory.getLogger("runtime");
         SYSTEM_LOGGER = LoggerFactory.getLogger("system");
         RECORD_LOGGER = LoggerFactory.getLogger("record");
@@ -40,12 +32,6 @@ public class Log {
         OTHER_LOGGER = LoggerFactory.getLogger("other");
         ERROR_LOGGER = LoggerFactory.getLogger("error");
         CAPTURE_LOGGER = LoggerFactory.getLogger("capture");
-    }
-
-    // 获取日志文件名
-    public static String getLogFileName(String logName) {
-        SimpleDateFormat sdf = DATE_FORMAT_THREAD_LOCAL.get();
-        return logName + "." + sdf.format(new Date()) + ".log";
     }
 
     private static String truncateLogmsg(String msg) {
@@ -165,4 +151,6 @@ public class Log {
         String stackTrace = "[" + TAG + "] Throwable error: " + android.util.Log.getStackTraceString(e);
         error(msg, stackTrace);
     }
+
+
 }
