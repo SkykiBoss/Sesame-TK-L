@@ -91,9 +91,6 @@ public class Status {
      * 绿色经营，评级领奖已完成用户
      */
     private Map<String, Integer> greenFinancePrizesMap = new HashMap<>();
-
-    // other
-    private final Set<String> flagLogList = new HashSet<>();
     /**
      * 农场助力
      */
@@ -621,13 +618,4 @@ public class Status {
     public static Status getINSTANCE() {
         return INSTANCE;
     }
-
-    public static void flagToday(String tag) {
-        if (!hasFlagToday(tag)) {
-            INSTANCE.flagLogList.add(tag);
-            save();
-        }
-    }
-
-
 }

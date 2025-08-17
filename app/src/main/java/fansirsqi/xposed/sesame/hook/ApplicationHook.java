@@ -31,9 +31,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.lang.reflect.Method;
+import java.lang.reflect.Member;
+import java.lang.reflect.InvocationTargetException;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import fansirsqi.xposed.sesame.BuildConfig;
@@ -65,7 +69,6 @@ import fansirsqi.xposed.sesame.util.PermissionUtil;
 import fansirsqi.xposed.sesame.util.StringUtil;
 import fansirsqi.xposed.sesame.util.TimeUtil;
 import fansirsqi.xposed.sesame.util.maps.UserMap;
-import fansirsqi.xposed.sesame.entity.RpcEntity;
 import fi.iki.elonen.NanoHTTPD;
 import kotlin.jvm.JvmStatic;
 import lombok.Getter;
@@ -135,6 +138,28 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         dayCalendar.set(Calendar.SECOND, 0);
     }
 
+
+    private final static Method deoptimizeMethod;
+
+    static {
+        Method m = null;
+        try {
+            m = XposedBridge.class.getDeclaredMethod("deoptimizeMethod", Member.class);
+        } catch (Throwable t) {
+            XposedBridge.log("E/" + TAG + " " + android.util.Log.getStackTraceString(t));
+        }
+        deoptimizeMethod = m;
+    }
+
+    static void deoptimizeMethod(Class<?> c, String n) throws InvocationTargetException, IllegalAccessException {
+        for (Method m : c.getDeclaredMethods()) {
+            if (deoptimizeMethod != null && m.getName().equals(n)) {
+                deoptimizeMethod.invoke(null, m);
+                if (BuildConfig.DEBUG)
+                    XposedBridge.log("D/" + TAG + " Deoptimized " + m.getName());
+            }
+        }
+    }
 
     /**
      * 调度定时执行
@@ -211,6 +236,14 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 if (hooked) return;
                 appLloadPackageParam = loadPackageParam;
                 classLoader = appLloadPackageParam.classLoader;
+                // 在Hook Application.attach 之前，先 deoptimize LoadedApk.makeApplicationInner
+                try {
+                    Class<?> loadedApkClass = classLoader.loadClass("android.app.LoadedApk");
+                    deoptimizeMethod(loadedApkClass, "makeApplicationInner");
+                } catch (Throwable t) {
+                    Log.runtime(TAG, "deoptimize makeApplicationInner err:");
+                    Log.printStackTrace(TAG, t);
+                }
                 XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -907,69 +940,4 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         intentFilter.addAction("com.eg.android.AlipayGphone.sesame.rpctest"); // 调试RPC的动作
         return intentFilter;
     }
-
-    public static String requestString(RpcEntity rpcEntity) {
-        return rpcBridge.requestString(rpcEntity, 3, -1);
-    }
-
-    public static String requestString(RpcEntity rpcEntity, int tryCount, int retryInterval) {
-        return rpcBridge.requestString(rpcEntity, tryCount, retryInterval);
-    }
-
-    public static String requestString(String method, String data) {
-        return rpcBridge.requestString(method, data);
-    }
-
-    public static String requestString(String method, String data, String relation) {
-        return rpcBridge.requestString(method, data, relation);
-    }
-
-    /*public static String requestString(String method, String data, String relation, Long time) {
-        return rpcBridge.requestString(method, data, relation, time);
-    }*/
-
-    public static String requestString(String method, String data, int tryCount, int retryInterval) {
-        return rpcBridge.requestString(method, data, tryCount, retryInterval);
-    }
-
-    public static String requestString(String method, String data, String relation, int tryCount, int retryInterval) {
-        return rpcBridge.requestString(method, data, relation, tryCount, retryInterval);
-    }
-
-    /*public static String requestString(String method, String data, String relation, Long time, int tryCount, int retryInterval) {
-        return rpcBridge.requestString(method, data, relation, time, tryCount, retryInterval);
-    }*/
-
-    public static RpcEntity requestObject(RpcEntity rpcEntity) {
-        return rpcBridge.requestObject(rpcEntity, 3, -1);
-    }
-
-    public static RpcEntity requestObject(RpcEntity rpcEntity, int tryCount, int retryInterval) {
-        return rpcBridge.requestObject(rpcEntity, tryCount, retryInterval);
-    }
-
-    public static RpcEntity requestObject(String method, String data) {
-        return rpcBridge.requestObject(method, data);
-    }
-
-    public static RpcEntity requestObject(String method, String data, String relation) {
-        return rpcBridge.requestObject(method, data, relation);
-    }
-
-    /*public static RpcEntity requestObject(String method, String data, String relation, Long time) {
-        return rpcBridge.requestObject(method, data, relation, time);
-    }*/
-
-    public static RpcEntity requestObject(String method, String data, int tryCount, int retryInterval) {
-        return rpcBridge.requestObject(method, data, tryCount, retryInterval);
-    }
-
-    public static RpcEntity requestObject(String method, String data, String relation, int tryCount, int retryInterval) {
-        return rpcBridge.requestObject(method, data, relation, tryCount, retryInterval);
-    }
-
-    /*public static RpcEntity requestObject(String method, String data, String relation, Long time, int tryCount, int retryInterval) {
-        return rpcBridge.requestObject(method, data, relation, time, tryCount, retryInterval);
-    }*/
-
 }
