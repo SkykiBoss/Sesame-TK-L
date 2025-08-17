@@ -1,5 +1,6 @@
 package fansirsqi.xposed.sesame.hook;
 
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -30,7 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -44,7 +44,6 @@ import fansirsqi.xposed.sesame.data.RunType;
 import fansirsqi.xposed.sesame.data.Status;
 import fansirsqi.xposed.sesame.data.ViewAppInfo;
 import fansirsqi.xposed.sesame.entity.AlipayVersion;
-import fansirsqi.xposed.sesame.entity.FriendWatch;
 import fansirsqi.xposed.sesame.hook.rpc.bridge.NewRpcBridge;
 import fansirsqi.xposed.sesame.hook.rpc.bridge.OldRpcBridge;
 import fansirsqi.xposed.sesame.hook.rpc.bridge.RpcBridge;
@@ -54,22 +53,25 @@ import fansirsqi.xposed.sesame.hook.rpc.intervallimit.RpcIntervalLimit;
 import fansirsqi.xposed.sesame.hook.server.ModuleHttpServer;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.Model;
+import fansirsqi.xposed.sesame.newutil.DataStore;
 import fansirsqi.xposed.sesame.task.BaseTask;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.util.AssetUtil;
 import fansirsqi.xposed.sesame.util.Detector;
+import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fansirsqi.xposed.sesame.util.Notify;
 import fansirsqi.xposed.sesame.util.PermissionUtil;
 import fansirsqi.xposed.sesame.util.StringUtil;
 import fansirsqi.xposed.sesame.util.TimeUtil;
+import fansirsqi.xposed.sesame.util.maps.UserMap;
+import fansirsqi.xposed.sesame.entity.RpcEntity;
 import fi.iki.elonen.NanoHTTPD;
+import kotlin.jvm.JvmStatic;
 import lombok.Getter;
 
 public class ApplicationHook implements IXposedHookLoadPackage {
     static final String TAG = ApplicationHook.class.getSimpleName();
-
     private ModuleHttpServer httpServer;
     private static final String modelVersion = BuildConfig.VERSION_NAME;
     private static final Map<String, PendingIntent> wakenAtTimeAlarmMap = new ConcurrentHashMap<>();
@@ -78,16 +80,26 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     @Getter
     private static Object microApplicationContextObject = null;
 
-    @Getter
     @SuppressLint("StaticFieldLeak")
     static Context appContext = null;
+
+    @JvmStatic
+    public static Context getAppContext() {
+        return appContext;
+    }
+
     @SuppressLint("StaticFieldLeak")
     static Context moduleContext = null;
 
     @Getter
     static AlipayVersion alipayVersion = new AlipayVersion("");
-    @Getter
     private static volatile boolean hooked = false;
+
+    @JvmStatic
+    public static boolean isHooked() {
+        return hooked;
+    }
+
     private static volatile boolean init = false;
     static volatile Calendar dayCalendar;
     @Getter
@@ -185,7 +197,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 Class<?> applicationClass = loadPackageParam.classLoader.loadClass("android.app.Application");
                 XposedHelpers.findAndHookMethod(applicationClass, "onCreate", new XC_MethodHook() {
                     @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    protected void afterHookedMethod(MethodHookParam param) {
                         moduleContext = (Context) param.thisObject;
                         // 可以在这里调用其他需要 Context 的 Hook 方法
                         HookUtil.INSTANCE.hookActive(loadPackageParam);
@@ -258,7 +270,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                         Toast.show("用户已切换");
                                         return;
                                     }
-                                    UserMap.initUser(targetUid);
+//                                    UserMap.initUser(targetUid);
+                                    HookUtil.INSTANCE.hookUser(appLloadPackageParam);
                                 }
                                 if (offline) {
                                     offline = false;
@@ -283,6 +296,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 if (!General.CURRENT_USING_SERVICE.equals(appService.getClass().getCanonicalName())) {
                                     return;
                                 }
+
                                 Log.runtime(TAG, "Service onCreate");
                                 appContext = appService.getApplicationContext();
                                 boolean isok = Detector.INSTANCE.isLegitimateEnvironment(appContext);
@@ -311,10 +325,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                         long currentTime = System.currentTimeMillis();
                                         if (lastExecTime + 2000 > currentTime) {
                                             Log.record(TAG, "执行间隔较短，跳过执行");
+                                            execDelayedHandler(BaseModel.getCheckInterval().getValue());
                                             return;
                                         }
                                         String currentUid = UserMap.getCurrentUid();
-                                        String targetUid = getUserId();
+                                        String targetUid = HookUtil.INSTANCE.getUserId(appLloadPackageParam.classLoader);
                                         if (targetUid == null || !targetUid.equals(currentUid)) {
                                             Log.record(TAG, "用户切换或为空，重新登录");
                                             reLogin();
@@ -337,7 +352,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         }
 
                 );
-                execDelayedHandler(BaseModel.getCheckInterval().getValue());
                 Log.runtime(TAG, "hook service onCreate successfully");
             } catch (Throwable t) {
                 Log.runtime(TAG, "hook service onCreate err");
@@ -355,7 +369,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 Log.record(TAG, "支付宝前台服务被销毁");
                                 Notify.updateStatusText("支付宝前台服务被销毁");
                                 destroyHandler(true);
-                                FriendWatch.unload();
                                 httpServer.stop();
                                 restartByBroadcast();
                             }
@@ -469,14 +482,13 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 return false;
             }
             if (force) {
-                String userId = getUserId();
+                String userId = HookUtil.INSTANCE.getUserId(appLloadPackageParam.classLoader);
                 if (userId == null) {
                     Log.record(TAG, "initHandler:用户未登录");
                     Toast.show("initHandler:用户未登录");
                     return false;
                 }
-                UserMap.initUser(userId);
-
+                HookUtil.INSTANCE.hookUser(appLloadPackageParam);
                 String startMsg = "芝麻粒-TK 开始初始化...";
                 Log.record(TAG, startMsg);
                 Log.record(TAG, "⚙️模块版本：" + modelVersion);
@@ -551,11 +563,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                     HookUtil.INSTANCE.hookDefaultBridgeCallback(appLloadPackageParam);
                 }
                 Model.bootAllModel(classLoader);
-                Status.load();
+                Status.load(userId);
                 DataCache.INSTANCE.load();
+                DataStore.INSTANCE.init(Files.CONFIG_DIR);
                 updateDay(userId);
-                FriendWatch.load(userId);
-                String successMsg = "芝麻粒-TK 加载成功✨当前版本为ALLG编译~";
+                String successMsg = "芝麻粒-TK 加载成功✨";
                 Log.record(successMsg);
                 Toast.show(successMsg);
             }
@@ -614,10 +626,16 @@ public class ApplicationHook implements IXposedHookLoadPackage {
      * @param delayMillis 延迟执行的毫秒数
      */
     static void execDelayedHandler(long delayMillis) {
-        mainHandler.postDelayed(
-                () -> mainTask.startTask(true), delayMillis);
+        if (mainHandler == null) {
+
+            return;
+        }
+        mainHandler.postDelayed(() -> mainTask.startTask(true), delayMillis);
         try {
-            Notify.updateNextExecText(System.currentTimeMillis() + delayMillis);
+            long nextExecTime = System.currentTimeMillis() + delayMillis;
+            String nt = nextExecTime > 0 ? "⏰ 下次执行 " + TimeUtil.getTimeStr(nextExecTime) : "";
+            Notify.updateNextExecText(nextExecTime);
+            Toast.show(nt);
         } catch (Exception e) {
             Log.printStackTrace(e);
         }
@@ -661,11 +679,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         } catch (Exception e) {
             Log.printStackTrace(e);
         }
-        try {
-            FriendWatch.updateDay(userId);
-        } catch (Exception e) {
-            Log.printStackTrace(e);
-        }
     }
 
     @SuppressLint({"ScheduleExactAlarm", "ObsoleteSdkInt", "MissingPermission"})
@@ -677,8 +690,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
             } else {
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, operation);
             }
-            Log.runtime(TAG,
-                    "setAlarmTask triggerAtMillis:" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(triggerAtMillis) + " operation:" + operation);
+            Log.runtime(TAG, "setAlarmTask triggerAtMillis:" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(triggerAtMillis) + " operation:" + operation);
             return true;
         } catch (Throwable th) {
             Log.runtime(TAG, "setAlarmTask err:");
@@ -895,4 +907,69 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         intentFilter.addAction("com.eg.android.AlipayGphone.sesame.rpctest"); // 调试RPC的动作
         return intentFilter;
     }
+
+    public static String requestString(RpcEntity rpcEntity) {
+        return rpcBridge.requestString(rpcEntity, 3, -1);
+    }
+
+    public static String requestString(RpcEntity rpcEntity, int tryCount, int retryInterval) {
+        return rpcBridge.requestString(rpcEntity, tryCount, retryInterval);
+    }
+
+    public static String requestString(String method, String data) {
+        return rpcBridge.requestString(method, data);
+    }
+
+    public static String requestString(String method, String data, String relation) {
+        return rpcBridge.requestString(method, data, relation);
+    }
+
+    /*public static String requestString(String method, String data, String relation, Long time) {
+        return rpcBridge.requestString(method, data, relation, time);
+    }*/
+
+    public static String requestString(String method, String data, int tryCount, int retryInterval) {
+        return rpcBridge.requestString(method, data, tryCount, retryInterval);
+    }
+
+    public static String requestString(String method, String data, String relation, int tryCount, int retryInterval) {
+        return rpcBridge.requestString(method, data, relation, tryCount, retryInterval);
+    }
+
+    /*public static String requestString(String method, String data, String relation, Long time, int tryCount, int retryInterval) {
+        return rpcBridge.requestString(method, data, relation, time, tryCount, retryInterval);
+    }*/
+
+    public static RpcEntity requestObject(RpcEntity rpcEntity) {
+        return rpcBridge.requestObject(rpcEntity, 3, -1);
+    }
+
+    public static RpcEntity requestObject(RpcEntity rpcEntity, int tryCount, int retryInterval) {
+        return rpcBridge.requestObject(rpcEntity, tryCount, retryInterval);
+    }
+
+    public static RpcEntity requestObject(String method, String data) {
+        return rpcBridge.requestObject(method, data);
+    }
+
+    public static RpcEntity requestObject(String method, String data, String relation) {
+        return rpcBridge.requestObject(method, data, relation);
+    }
+
+    /*public static RpcEntity requestObject(String method, String data, String relation, Long time) {
+        return rpcBridge.requestObject(method, data, relation, time);
+    }*/
+
+    public static RpcEntity requestObject(String method, String data, int tryCount, int retryInterval) {
+        return rpcBridge.requestObject(method, data, tryCount, retryInterval);
+    }
+
+    public static RpcEntity requestObject(String method, String data, String relation, int tryCount, int retryInterval) {
+        return rpcBridge.requestObject(method, data, relation, tryCount, retryInterval);
+    }
+
+    /*public static RpcEntity requestObject(String method, String data, String relation, Long time, int tryCount, int retryInterval) {
+        return rpcBridge.requestObject(method, data, relation, time, tryCount, retryInterval);
+    }*/
+
 }

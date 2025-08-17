@@ -25,6 +25,9 @@ public interface RpcBridge {
     }
     RpcEntity requestObject(RpcEntity rpcEntity, int tryCount, int retryInterval);
 
+    default RpcEntity requestObject(String method, String data) {
+        return requestObject(method, data, 3, -1);
+    }
     default RpcEntity requestObject(String method, String data, String relation) {
         return requestObject(method, data, relation, 3, -1);
     }
