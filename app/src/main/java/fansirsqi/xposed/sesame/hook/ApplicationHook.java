@@ -940,4 +940,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         intentFilter.addAction("com.eg.android.AlipayGphone.sesame.rpctest"); // 调试RPC的动作
         return intentFilter;
     }
+    
+    public static String requestString(String method, String data) {
+        return rpcBridge.requestString(method, data);
+    }
 }
