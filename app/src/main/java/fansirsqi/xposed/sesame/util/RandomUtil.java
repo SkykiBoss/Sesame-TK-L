@@ -1,5 +1,5 @@
 package fansirsqi.xposed.sesame.util;
-
+import java.util.UUID;
 import java.util.Random;
 
 /**
@@ -94,5 +94,10 @@ public class RandomUtil {
         return "_" + System.currentTimeMillis() + "_" + RandomUtil.getRandomString(8);
     }
 
+    public class RandomUtil {
+    public static String getRandomUUID() {
+        return UUID.randomUUID().toString();
+    }
+}
 
 }
