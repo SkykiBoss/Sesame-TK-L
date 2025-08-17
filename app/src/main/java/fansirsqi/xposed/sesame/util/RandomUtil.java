@@ -94,10 +94,7 @@ public class RandomUtil {
         return "_" + System.currentTimeMillis() + "_" + RandomUtil.getRandomString(8);
     }
 
-    public class RandomUtil {
     public static String getRandomUUID() {
         return UUID.randomUUID().toString();
     }
-}
-
 }
