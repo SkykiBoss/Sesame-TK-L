@@ -2,7 +2,6 @@ package fansirsqi.xposed.sesame.task.antMember;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.util.Objects;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
@@ -23,7 +22,6 @@ import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.data.Status;
 import fansirsqi.xposed.sesame.util.TimeUtil;
-import fansirsqi.xposed.sesame.util.MessageUtil;
 public class AntMember extends ModelTask {
   private static final String TAG = AntMember.class.getSimpleName();
   @Override
@@ -218,89 +216,46 @@ public class AntMember extends ModelTask {
    */
   private void doMemberSign() {
     try {
-      if (!Status.hasFlagToday("member::sign")) {
-        JSONObject jo = new JSONObject(AntMemberRpcCall.queryMemberSigninCalendar());
+      if (Status.canMemberSignInToday(UserMap.getCurrentUid())) {
+        String s = AntMemberRpcCall.queryMemberSigninCalendar();
         GlobalThreadPools.sleep(500);
-        if (MessageUtil.checkResultCode(TAG, jo)) {
-          Log.other("会员签到📅[坚持" + jo.getString("signinSumDay") + "天]#获得[" + jo.getString("signinPoint") + "积分]");
-          Status.setFlagToday("member::sign");
+        JSONObject jo = new JSONObject(s);
+        if (ResChecker.checkRes(TAG,jo)) {
+          Log.other("会员签到📅[" + jo.getString("signinPoint") + "积分]#已签到" + jo.getString("signinSumDay") + "天");
+          Status.memberSignInToday(UserMap.getCurrentUid());
+        } else {
+          Log.record(jo.getString("resultDesc"));
+          Log.runtime(s);
         }
       }
-
-      // 领取积分奖励（分页）
       queryPointCert(1, 8);
-
     } catch (Throwable t) {
-      Log.runtime(TAG, "doMemberSign err:");
       Log.printStackTrace(TAG, t);
     }
   }
-
   /**
    * 会员任务-逛一逛
    * 单次执行 1
    */
   private void doAllMemberAvailableTask() {
     try {
-      do {
-        JSONObject jo = new JSONObject(AntMemberRpcCall.signPageTaskList());
-        GlobalThreadPools.sleep(500);
-
-        boolean doubleCheck = false;
-
-        if (!MessageUtil.checkResultCode(TAG + " signPageTaskList", jo)) return;
-        if (!jo.has("categoryTaskList")) return;
-
-        JSONArray categoryTaskList = jo.getJSONArray("categoryTaskList");
-        for (int i = 0; i < categoryTaskList.length(); i++) {
-          jo = categoryTaskList.getJSONObject(i);
-          JSONArray taskList = jo.getJSONArray("taskList");
-          String type = jo.getString("type");
-
-          if ("BROWSE".equals(type)) {
-            doubleCheck = doBrowseTask(taskList); // 浏览类任务特殊处理
-          } else {
-            handleAlphaRequest("antMember", "doMoreTask", jo);
-          }
-        }
-
-        if (doubleCheck) continue; // 有任务未完成，继续循环
-        break;
-      } while (true);
-
-    } catch (Throwable t) {
-      Log.runtime(TAG, "signPageTaskList err:");
-      Log.printStackTrace(TAG, t);
-    }
-  }
-  public static Object handleAlphaRequest(String type, String fun, Object data) {
-    try {
-      return Class.forName("ExtensionsHandleAlpha")
-              .getMethod("handleAlphaRequest", String.class, String.class, Object.class)
-              .invoke(null, type, fun, data);
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-
-  /**
-   * 查询并执行所有状态任务
-   */
-  private void queryAllStatusTaskList() {
-    try {
-      JSONObject jo = new JSONObject(AntMemberRpcCall.queryAllStatusTaskList());
+      String str = AntMemberRpcCall.queryAllStatusTaskList();
       GlobalThreadPools.sleep(500);
-
-      if (!MessageUtil.checkResultCode(TAG, jo)) return;
-
-      JSONArray availableTaskList = jo.getJSONArray("availableTaskList");
-      if (doBrowseTask(availableTaskList)) {
-        queryAllStatusTaskList(); // 有任务未完成，递归再次查询
+      JSONObject jsonObject = new JSONObject(str);
+      if (!ResChecker.checkRes(TAG, jsonObject)) {
+        Log.error(TAG + ".doAllMemberAvailableTask", "会员任务响应失败: " + jsonObject.getString("resultDesc"));
+        return;
       }
-
+      if (!jsonObject.has("availableTaskList")) {
+        return;
+      }
+      JSONArray taskList = jsonObject.getJSONArray("availableTaskList");
+      for (int j = 0; j < taskList.length(); j++) {
+        JSONObject task = taskList.getJSONObject(j);
+        processTask(task);
+      }
     } catch (Throwable t) {
-      Log.runtime(TAG, "queryAllStatusTaskList err:");
+      Log.runtime(TAG, "doAllMemberAvailableTask err:");
       Log.printStackTrace(TAG, t);
     }
   }
@@ -311,58 +266,37 @@ public class AntMember extends ModelTask {
    */
   private static void queryPointCert(int page, int pageSize) {
     try {
-      JSONObject jo = new JSONObject(AntMemberRpcCall.queryPointCert(page, pageSize));
+      String s = AntMemberRpcCall.queryPointCert(page, pageSize);
       GlobalThreadPools.sleep(500);
-
-      if (!MessageUtil.checkResultCode(TAG, jo)) return;
-
-      boolean hasNextPage = jo.getBoolean("hasNextPage");
-      JSONArray jaCertList = jo.getJSONArray("certList");
-
-      for (int i = 0; i < jaCertList.length(); i++) {
-        jo = jaCertList.getJSONObject(i);
-        String bizTitle = jo.getString("bizTitle");
-        String id = jo.getString("id");
-        int pointAmount = jo.getInt("pointAmount");
-
-        jo = new JSONObject(AntMemberRpcCall.receivePointByUser(id));
-        if (MessageUtil.checkResultCode(TAG, jo)) {
-          Log.other("会员任务🎖️领取[" + bizTitle + "]奖励#获得[" + pointAmount + "积分]");
+      JSONObject jo = new JSONObject(s);
+      if (ResChecker.checkRes(TAG,jo)) {
+        boolean hasNextPage = jo.getBoolean("hasNextPage");
+        JSONArray jaCertList = jo.getJSONArray("certList");
+        for (int i = 0; i < jaCertList.length(); i++) {
+          jo = jaCertList.getJSONObject(i);
+          String bizTitle = jo.getString("bizTitle");
+          String id = jo.getString("id");
+          int pointAmount = jo.getInt("pointAmount");
+          s = AntMemberRpcCall.receivePointByUser(id);
+          jo = new JSONObject(s);
+          if (ResChecker.checkRes(TAG,jo)) {
+            Log.other("会员积分🎖️[领取" + bizTitle + "]#" + pointAmount + "积分");
+          } else {
+            Log.record(jo.getString("resultDesc"));
+            Log.runtime(s);
+          }
         }
+        if (hasNextPage) {
+          queryPointCert(page + 1, pageSize);
+        }
+      } else {
+        Log.record(jo.getString("resultDesc"));
+        Log.runtime(s);
       }
-
-      if (hasNextPage) {
-        queryPointCert(page + 1, pageSize);
-      }
-
     } catch (Throwable t) {
       Log.runtime(TAG, "queryPointCert err:");
       Log.printStackTrace(TAG, t);
     }
-  }
-
-  // 蚂蚁积分-做浏览任务
-  private static Boolean doBrowseTask(JSONArray taskList) {
-    boolean doubleCheck = false;
-    try {
-      for (int i = 0; i < taskList.length(); i++) {
-        JSONObject task = taskList.getJSONObject(i);
-        if (task.getBoolean("hybrid")) {
-          int periodCurrentCount = Integer.parseInt(task.getJSONObject("extInfo").getString("PERIOD_CURRENT_COUNT"));
-          int periodTargetCount = Integer.parseInt(task.getJSONObject("extInfo").getString("PERIOD_TARGET_COUNT"));
-          int count = periodTargetCount > periodCurrentCount ? periodTargetCount - periodCurrentCount : 0;
-          if (count > 0) {
-            doubleCheck = doubleCheck || doBrowseTask(taskList);
-          }
-        } else {
-          doubleCheck = doubleCheck || doBrowseTask(taskList);
-        }
-      }
-    } catch (Throwable t) {
-      Log.error(TAG, "doBrowseTask err:");
-      Log.printStackTrace(TAG, t);
-    }
-    return doubleCheck;
   }
   /**
    * 检查是否满足运行芝麻信用任务的条件
