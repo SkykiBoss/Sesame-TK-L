@@ -20,6 +20,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 
+import fansirsqi.xposed.sesame.data.DataCache;
 import fansirsqi.xposed.sesame.entity.AlipayUser;
 import fansirsqi.xposed.sesame.entity.MapperEntity;
 import fansirsqi.xposed.sesame.entity.OtherEntityProvider;
@@ -35,7 +36,6 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.ListModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
-import fansirsqi.xposed.sesame.newutil.DataStore;
 import fansirsqi.xposed.sesame.task.AnswerAI.AnswerAI;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
@@ -56,7 +56,6 @@ import lombok.ToString;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -109,7 +108,7 @@ public class AntFarm extends ModelTask {
         return "AntFarm.png";
     }
 
-    private static final String FARM_ANSWER_CACHE_KEY = "farmQuestionCache";
+    private static final String FARM_ANSWER_CACHE_KEY = "farmAnswerQuestionCache";
     private static final String ANSWERED_FLAG = "farmQuestion::answered"; // 今日是否已答题
     private static final String CACHED_FLAG = "farmQuestion::cache";     // 是否已缓存明日答案
 
@@ -213,7 +212,7 @@ public class AntFarm extends ModelTask {
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
         modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2330"));
-        modelFields.addField(sleepMinutes = new IntegerModelField("sleepMinutes", "小鸡睡觉时长(分钟)", 10 * 36, 1, 10 * 60));
+        modelFields.addField(sleepMinutes = new IntegerModelField("sleepMinutes", "小鸡睡觉时长(分钟)", 10 * 59, 1, 10 * 60));
         modelFields.addField(recallAnimalType = new ChoiceModelField("recallAnimalType", "召回小鸡", RecallAnimalType.ALWAYS, RecallAnimalType.nickNames));
         modelFields.addField(rewardFriend = new BooleanModelField("rewardFriend", "打赏好友", false));
         modelFields.addField(feedAnimal = new BooleanModelField("feedAnimal", "自动喂小鸡", false));
@@ -662,6 +661,7 @@ public class AntFarm extends ModelTask {
         return null;
     }
 
+
     /**
      * 自动喂鸡
      */
@@ -742,6 +742,7 @@ public class AntFarm extends ModelTask {
             receiveFarmAwards();
         }
     }
+
 
     private void animalSleepNow() {
         try {
@@ -905,7 +906,9 @@ public class AntFarm extends ModelTask {
         }
         try {
             for (Animal animal : animals) {
-                if (AnimalInteractStatus.STEALING.name().equals(animal.animalInteractStatus) && !SubAnimalType.GUEST.name().equals(animal.subAnimalType) && !SubAnimalType.WORK.name().equals(animal.subAnimalType)) {
+                if (AnimalInteractStatus.STEALING.name().equals(animal.animalInteractStatus)
+                        && !SubAnimalType.GUEST.name().equals(animal.subAnimalType)
+                        && !SubAnimalType.WORK.name().equals(animal.subAnimalType)) {
                     // 赶鸡
                     String user = AntFarmRpcCall.farmId2UserId(animal.masterFarmId);
                     boolean isSendBackAnimal = sendBackAnimalList.getValue().contains(user);
@@ -917,7 +920,9 @@ public class AntFarm extends ModelTask {
                     }
                     int sendTypeInt = sendBackAnimalWay.getValue();
                     user = UserMap.getMaskName(user);
-                    String s = AntFarmRpcCall.sendBackAnimal(SendBackAnimalWay.nickNames[sendTypeInt], animal.animalId, animal.currentFarmId, animal.masterFarmId);
+                    String s = AntFarmRpcCall.sendBackAnimal(
+                            SendBackAnimalWay.nickNames[sendTypeInt], animal.animalId,
+                            animal.currentFarmId, animal.masterFarmId);
                     JSONObject jo = new JSONObject(s);
                     String memo = jo.getString("memo");
                     if (ResChecker.checkRes(TAG, jo)) {
@@ -1079,10 +1084,7 @@ public class AntFarm extends ModelTask {
         try {
             String today = TimeUtil.getDateStr2();
             String tomorrow = TimeUtil.getDateStr2(1);
-            Map<String, String> farmAnswerCache = DataStore.INSTANCE.getOrCreate(FARM_ANSWER_CACHE_KEY, new TypeReference<Map<String, String>>() {
-            });
-
-
+            Map<String, String> farmAnswerCache = DataCache.INSTANCE.getData(FARM_ANSWER_CACHE_KEY, new HashMap<>());
             cleanOldAnswers(farmAnswerCache, today);
 
             // 检查是否今天已经答过题
@@ -1175,8 +1177,10 @@ public class AntFarm extends ModelTask {
     private void updateTomorrowAnswerCache(JSONArray operationConfigList, String date) {
         try {
             Log.runtime(TAG, "updateTomorrowAnswerCache 开始更新缓存");
-            Map<String, String> farmAnswerCache = DataStore.INSTANCE.getOrCreate(FARM_ANSWER_CACHE_KEY, new TypeReference<Map<String, String>>() {
-            });
+            Map<String, String> farmAnswerCache = DataCache.INSTANCE.getData(FARM_ANSWER_CACHE_KEY, new HashMap<>());
+            if (farmAnswerCache == null) {
+                farmAnswerCache = new HashMap<>();
+            }
             for (int j = 0; j < operationConfigList.length(); j++) {
                 JSONObject operationConfig = operationConfigList.getJSONObject(j);
                 String type = operationConfig.getString("type");
@@ -1193,7 +1197,7 @@ public class AntFarm extends ModelTask {
                     }
                 }
             }
-            DataStore.INSTANCE.put(FARM_ANSWER_CACHE_KEY, farmAnswerCache);
+            DataCache.INSTANCE.saveData(FARM_ANSWER_CACHE_KEY, farmAnswerCache);
             Log.runtime(TAG, "updateTomorrowAnswerCache 缓存更新完毕");
         } catch (Exception e) {
             Log.printStackTrace(TAG, "updateTomorrowAnswerCache 错误:", e);
@@ -1228,7 +1232,7 @@ public class AntFarm extends ModelTask {
                     }
                 }
             }
-            DataStore.INSTANCE.put(FARM_ANSWER_CACHE_KEY, cleanedMap);
+            DataCache.INSTANCE.saveData(FARM_ANSWER_CACHE_KEY, cleanedMap);
             Log.runtime(TAG, "cleanOldAnswers 清理缓存完毕");
         } catch (Exception e) {
             Log.printStackTrace(TAG, "cleanOldAnswers error:", e);
@@ -1399,7 +1403,7 @@ public class AntFarm extends ModelTask {
                             if (Objects.equals(task.optString("awardType"), "ALLPURPOSE")) {
                                 if (awardCount + foodStock > foodStockLimit) {
                                     unreceiveTaskAward++;
-                                    Log.record(TAG, taskTitle + "领取" + awardCount + "g饲料后将超过[" + foodStockLimit + "g]上限!终止领取");
+                                    Log.record(TAG, taskTitle + "领取" + awardCount + "g饲料后将超过[" + foodStockLimit + "g]上限，终止领取");
                                     break;
                                 }
                             }
@@ -1460,7 +1464,9 @@ public class AntFarm extends ModelTask {
                 Log.record(TAG, "喂鸡饲料不足");
             } else {
                 JSONObject jo = new JSONObject(AntFarmRpcCall.feedAnimal(farmId));
-                Log.farm("投喂小鸡🥣[180g]#剩余" + jo.getInt("foodStock") + "g");
+                int feedFood = foodStock - jo.getInt("foodStock");
+                add2FoodStock(-feedFood);
+                Log.farm("投喂小鸡🥣[" + feedFood + "g]#剩余" + foodStock + "g");
                 return true;
             }
         } catch (Throwable t) {
@@ -1615,9 +1621,12 @@ public class AntFarm extends ModelTask {
                                     }
                                     JSONObject feedFriendAnimaljo = new JSONObject(AntFarmRpcCall.feedFriendAnimal(friendFarmId));
                                     if (ResChecker.checkRes(TAG, feedFriendAnimaljo)) {
-                                        foodStock = feedFriendAnimaljo.getInt("foodStock");
-                                        Log.farm("帮喂好友🥣[" + user + "]的小鸡[180g]#剩余" + foodStock + "g");
-                                        Status.feedFriendToday(AntFarmRpcCall.farmId2UserId(friendFarmId));
+                                        int feedFood = foodStock - feedFriendAnimaljo.getInt("foodStock");
+                                        if (feedFood > 0) {
+                                            add2FoodStock(-feedFood);
+                                            Log.farm("帮喂好友🥣[" + user + "]的小鸡[" + feedFood + "g]#剩余" + foodStock + "g");
+                                            Status.feedFriendToday(AntFarmRpcCall.farmId2UserId(friendFarmId));
+                                        }
                                     } else {
                                         Log.error(TAG, "😞喂[" + user + "]的鸡失败" + feedFriendAnimaljo);
                                         Status.setFlagToday("farm::feedFriendLimit");
@@ -1707,8 +1716,11 @@ public class AntFarm extends ModelTask {
 
     private boolean notifyFriend(JSONObject joAnimalStatusVO, String friendFarmId, String animalId, String user) {
         try {
-            if (AnimalInteractStatus.STEALING.name().equals(joAnimalStatusVO.getString("animalInteractStatus")) && AnimalFeedStatus.EATING.name().equals(joAnimalStatusVO.getString("animalFeedStatus"))) {
-                JSONObject jo = new JSONObject(AntFarmRpcCall.notifyFriend(animalId, friendFarmId));
+            if (AnimalInteractStatus.STEALING.name().equals(joAnimalStatusVO.getString("animalInteractStatus"))
+                    && AnimalFeedStatus.EATING.name().equals(joAnimalStatusVO.getString("animalFeedStatus"))) {
+                String s = AntFarmRpcCall.notifyFriend(animalId, friendFarmId);
+                JSONObject jo = new JSONObject(s);
+                String memo = jo.getString("memo");
                 if (ResChecker.checkRes(TAG, jo)) {
                     double rewardCount = jo.getDouble("rewardCount");
                     if (jo.getBoolean("refreshFoodStock"))
@@ -1717,10 +1729,14 @@ public class AntFarm extends ModelTask {
                         add2FoodStock((int) rewardCount);
                     Log.farm("通知好友📧[" + user + "]被偷吃#奖励" + rewardCount + "g");
                     return true;
+                } else {
+                    Log.record(memo);
+                    Log.runtime(s);
                 }
             }
         } catch (Throwable t) {
-            Log.printStackTrace(TAG, "notifyFriend err:", t);
+            Log.runtime(TAG, "notifyFriend err:");
+            Log.printStackTrace(TAG, t);
         }
         return false;
     }
@@ -1951,27 +1967,22 @@ public class AntFarm extends ModelTask {
         }
     }
 
-    /**
-     * 送麦子
-     */
     private void visit() {
         try {
             Map<String, Integer> map = visitFriendList.getValue();
-            if (map == null || map.isEmpty()) return;
-            String currentUid = UserMap.getCurrentUid();
             for (Map.Entry<String, Integer> entry : map.entrySet()) {
                 String userId = entry.getKey();
-                int count = entry.getValue();
-                // 跳过自己和非法数量
-                if (userId.equals(currentUid) || count <= 0) continue;
-                // 限制最大访问次数
-                int visitCount = Math.min(count, 3);
-                // 如果今天还可以访问
-                if (Status.canVisitFriendToday(userId, visitCount)) {
-                    int remaining = visitFriend(userId, visitCount);
-                    if (remaining > 0) {
-                        Status.visitFriendToday(userId, remaining);
-                    }
+                Integer count = entry.getValue();
+                if (userId.equals(UserMap.getCurrentUid()))
+                    continue;
+                if (count <= 0)
+                    continue;
+                if (count > 3)
+                    count = 3;
+                if (Status.canVisitFriendToday(userId, count)) {
+                    count = visitFriend(userId, count);
+                    if (count > 0)
+                        Status.visitFriendToday(userId, count);
                 }
             }
         } catch (Throwable t) {
@@ -1980,11 +1991,11 @@ public class AntFarm extends ModelTask {
         }
     }
 
-
     private int visitFriend(String userId, int count) {
         int visitedTimes = 0;
         try {
-            JSONObject jo = new JSONObject(AntFarmRpcCall.enterFarm(userId, userId));
+            String s = AntFarmRpcCall.enterFarm(userId, userId);
+            JSONObject jo = new JSONObject(s);
             if (ResChecker.checkRes(TAG, jo)) {
                 JSONObject farmVO = jo.getJSONObject("farmVO");
                 foodStock = farmVO.getInt("foodStock");
@@ -2005,9 +2016,15 @@ public class AntFarm extends ModelTask {
                             visitedTimes = 3;
                             break;
                         }
+                    } else {
+                        Log.record(jo.getString("memo"));
+                        Log.runtime(jo.toString());
                     }
-                    GlobalThreadPools.sleep(800L);
+                    GlobalThreadPools.sleep(1000L);
                 }
+            } else {
+                Log.record(jo.getString("memo"));
+                Log.runtime(s);
             }
         } catch (Throwable t) {
             Log.runtime(TAG, "visitFriend err:");
