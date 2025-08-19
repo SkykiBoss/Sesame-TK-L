@@ -177,6 +177,7 @@ public class AntFarm extends ModelTask {
      */
     private BooleanModelField receiveFarmTaskAward;
     private BooleanModelField useAccelerateTool;
+    private BooleanModelField useBigEaterTool; // ✅ 新增加饭卡
     private BooleanModelField useAccelerateToolContinue;
     private BooleanModelField useAccelerateToolWhenMaxEmotion;
     /**
@@ -233,6 +234,7 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
+        modelFields.addField(useBigEaterTool = new BooleanModelField("useBigEaterTool", "加饭卡 | 使用", false));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -678,20 +680,32 @@ public class AntFarm extends ModelTask {
             }
         }
 
-        // 2. 判断是否需要使用加速道具
+        // 2. 使用加饭卡（仅当正在吃饭且开启配置）
+        if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAnimal.animalFeedStatus)) {
+            boolean result = useFarmTool(ownerFarmId, AntFarm.ToolType.BIG_EATER_TOOL);
+            if (result) {
+                Log.farm("使用道具🎭[加饭卡]！");
+                GlobalThreadPools.sleep(1000);
+                needReload = true;
+            } else {
+                Log.record("⚠️使用道具🎭[加饭卡]失败，可能卡片不足或状态异常~");
+            }
+        }
+
+        // 3. 判断是否需要使用加速道具
         if (useAccelerateTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
             if (useAccelerateTool()) {
                 needReload = true;
             }
         }
 
-        // 3. 如果有操作导致状态变化，则刷新庄园信息
+        // 4. 如果有操作导致状态变化，则刷新庄园信息
         if (needReload) {
             enterFarm();
             syncAnimalStatus(ownerFarmId);
         }
 
-        // 4. 计算并安排下一次自动喂食任务
+        // 5. 计算并安排下一次自动喂食任务
         try {
             Long startEatTime = ownerAnimal.startEatTime;
             double allFoodHaveEatten = 0d;
@@ -718,7 +732,7 @@ public class AntFarm extends ModelTask {
             Log.printStackTrace(e);
         }
 
-        // 5. 其他功能（换装、领取饲料）
+        // 6. 其他功能（换装、领取饲料）
         // 小鸡换装
         if (listOrnaments.getValue() && Status.canOrnamentToday()) {
             listOrnaments();
@@ -1305,12 +1319,18 @@ public class AntFarm extends ModelTask {
      */
     private void doFarmTasks() {
         try {
-            List<String> taskList = new ArrayList<>(List.of(
-                    "HEART_DONATION_ADVANCED_FOOD_V2",
-                    "HEART_DONATE"
+            Set<String> presetBad = new LinkedHashSet<>(List.of(
+                    "HEART_DONATION_ADVANCED_FOOD_V2",//香草芒果冰糕任务
+                    "HEART_DONATE",//爱心捐赠
+                    "SHANGOU_xiadan",//去买秋天第一杯奶茶
+                    "OFFLINE_PAY",//到店付款,线下支付
+                    "ONLINE_PAY"//在线支付
             ));
-            List<String> cachedList = DataCache.INSTANCE.getData("farmCompletedTaskSet", taskList);
-            taskList = new ArrayList<>(new LinkedHashSet<>(cachedList)); // 去重可选
+            TypeReference<Set<String>> typeRef = new TypeReference<>() {
+            };
+            Set<String> badTaskSet = DataStore.INSTANCE.getOrCreate("badFarmTaskSet", typeRef);
+            badTaskSet.addAll(presetBad);
+            DataStore.INSTANCE.put("badFarmTaskSet", badTaskSet);
             JSONObject jo = new JSONObject(AntFarmRpcCall.listFarmTask());
             if (ResChecker.checkRes(TAG, jo)) {
                 JSONArray farmTaskList = jo.getJSONArray("farmTaskList");
@@ -1321,11 +1341,9 @@ public class AntFarm extends ModelTask {
                     String bizKey = task.getString("bizKey");
                     String taskMode = task.optString("taskMode");
                     // 跳过已被屏蔽的任务
-                    if (taskList.contains(bizKey)) {
-                        continue;
-                    }
+                    if (badTaskSet.contains(bizKey)) continue;
                     if (TaskStatus.TODO.name().equals(taskStatus)) {
-                        if (!taskList.contains(bizKey)) {
+                        if (!badTaskSet.contains(bizKey)) {
                             if ("VIDEO_TASK".equals(bizKey)) {
                                 JSONObject taskVideoDetailjo = new JSONObject(AntFarmRpcCall.queryTabVideoUrl());
                                 if (ResChecker.checkRes(TAG, taskVideoDetailjo)) {
@@ -1348,7 +1366,8 @@ public class AntFarm extends ModelTask {
                                     Log.farm("庄园任务🧾[" + title + "]");
                                 } else {
                                     Log.error("庄园任务失败：" + title + "\n" + taskDetailjo);
-                                    taskList.add(bizKey); // 避免重复失败
+                                    badTaskSet.add(bizKey); // 避免重复失败
+                                    DataStore.INSTANCE.put("badFarmTaskSet", badTaskSet);
                                 }
                             }
                         }
@@ -1359,7 +1378,6 @@ public class AntFarm extends ModelTask {
                     GlobalThreadPools.sleep(1000);
                 }
             }
-            DataCache.INSTANCE.saveData("farmCompletedTaskSet", taskList);
         } catch (Throwable t) {
             Log.printStackTrace(TAG, "doFarmTasks 错误:", t);
         }
@@ -2608,9 +2626,9 @@ public class AntFarm extends ModelTask {
     }
 
     public enum ToolType {
-        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL;
+        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL, BIG_EATER_TOOL, RARE_ORNAMENT_TOOL;
 
-        public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡"};
+        public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡", "加饭卡", "稀有装扮补签卡"};
 
         public CharSequence nickName() {
             return nickNames[ordinal()];
