@@ -10,7 +10,7 @@ import java.net.URL
 
 object FansirsqiUtil {
     // 定义一言API的URL
-    private const val HITOKOTO_API_URL = "https://v1.hitokoto.cn/"
+    private const val HITOKOTO_API_URL = "https://60s.cccccc.plus/v2/love"
 
     /**
      * 获取一言（挂起函数），推荐在协程中使用
@@ -27,17 +27,16 @@ object FansirsqiUtil {
                 reader.readText()
             }
 
-            val jsonObject = JSONObject(response)
-            val hitokoto = jsonObject.optString(
-                "hitokoto",
-                " 去年相送，余杭门外，飞雪似杨花。\n今年春尽，杨花似雪，犹不见还家。"
+             val jsonObject = JSONObject(response)
+            val dataObject = jsonObject.getJSONObject("data")
+            val hitokoto = dataObject.optString(
+                "love", // 爱情语录
+                " 好好吃饭。🍚"
             )
-            val from = jsonObject.optString("from", "少年游·润州作代人寄远 苏轼")
-
-            "$hitokoto\n\n                    -----Re: $from"
+            "$hitokoto\n\n                    -----By：《 F ❤ C 》"
         } catch (e: Exception) {
             Log.printStackTrace(e)
-            " 去年相送，余杭门外，飞雪似杨花。\n今年春尽，杨花似雪，犹不见还家。\n\n                    -----Re: 少年游·润州作代人寄远 苏轼"
+            " 好好吃饭。\n\n                    -----By：《 F ❤ C 》"
         }
     }
 
