@@ -11,7 +11,7 @@ import fansirsqi.xposed.sesame.data.ViewAppInfo.verifyId
 class WatermarkView(context: android.content.Context) : android.view.View(context) {
 
     private val paint = Paint().apply {
-        color = "#66FF0000".toColorInt()
+        color = "#00FFFFFF".toColorInt()
         textSize = 38f
         isAntiAlias = true
         textAlign = Paint.Align.LEFT
@@ -22,7 +22,7 @@ class WatermarkView(context: android.content.Context) : android.view.View(contex
 
     var watermarkText: String? = null
         set(value) {
-            val prefixLines = listOf("免费模块仅供学习", "勿在国内平台传播,倒卖必死全家!", "UID: $verifyId", "阿亮亮哥编译版本")
+            val prefixLines = listOf("免费模块仅供学习", "勿在国内平台传播,倒卖必死全家!", "好好吃饭🍚")
             val combinedLines = if (value.isNullOrBlank()) {
                 prefixLines
             } else {
@@ -67,7 +67,7 @@ class WatermarkView(context: android.content.Context) : android.view.View(contex
     private fun rebuildColorCache() {
         colorCache.clear()
         repeat(maxDrawCount) {
-            val alpha = 0xc6
+            val alpha = 0x00
             val r = (180..255).random()
             val g = (180..255).random()
             val b = (180..255).random()
@@ -129,7 +129,7 @@ class WatermarkView(context: android.content.Context) : android.view.View(contex
         fun install(
             activity: Activity,
             text: String = "",
-            color: Int = "#87FF0000".toColorInt(),
+            color: Int = "#00FFFFFF".toColorInt(),
             fontSize: Float = 28f,
             spacingX: Float = 2.5f,
             spacingY: Float = 3.7f

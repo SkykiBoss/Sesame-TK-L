@@ -74,7 +74,7 @@ class MainActivity : BaseActivity() {
         val v = WatermarkView.install(this)
         deviceInfo.setContent {
             val customColorScheme = lightColorScheme(
-                primary = Color(0xFF3F51B5), onPrimary = Color.White, background = Color(0xFFF5F5F5), onBackground = Color.Black
+                primary = Color(0x00FFFFFF), onPrimary = Color.White, background = Color(0x00FFFFFF), onBackground = Color.White
             )
             MaterialTheme(colorScheme = customColorScheme) {
                 DeviceInfoCard(DeviceInfoUtil.showInfo(verifyId))
