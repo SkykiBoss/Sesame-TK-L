@@ -88,7 +88,7 @@ fun DeviceInfoCard(info: Map<String, String>) {
             }
             // 循环外单独显示红色自定义文字
             Text(
-                text = "ALLG编译，与原版保持一致。👑",
+                text = "好好吃饭🍚",
                 fontSize = 12.sp,
                 color = Color.Red
             )
@@ -135,4 +135,5 @@ object DeviceInfoUtil {
             "Module Build" to "${BuildConfig.BUILD_DATE} ${BuildConfig.BUILD_TIME} ⏰"
         )
     }
+
 }
