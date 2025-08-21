@@ -23,20 +23,20 @@ object ModelOrder {
         BaseModel::class.java,       // 基础设置
         AntForest::class.java,       // 森林
         AntFarm::class.java,         // 庄园
+        AntStall::class.java,        // 蚂蚁新村
         AntOcean::class.java,        // 海洋
-        AntOrchard::class.java,    // 农场
-        AntStall::class.java,      // 蚂蚁新村
-        AntDodo::class.java,       // 神奇物种
-        AntCooperate::class.java,    // 合种
         AntSports::class.java,       // 运动
-        AntMember::class.java,     // 会员
+        AntMember::class.java,       // 会员
+        AntOrchard::class.java,      // 农场
+        AntDodo::class.java,         // 神奇物种
+        AntCooperate::class.java,    // 合种
         AncientTree::class.java,     // 古树
-        GreenFinance::class.java,  // 绿色经营
-        Reserve::class.java,       // 保护地
+        GreenFinance::class.java,    // 绿色经营
+        Reserve::class.java,         // 保护地
+        AntBookRead::class.java,     // 读书
         AnswerAI::class.java         // AI答题
-      //AntBookRead::class.java,   // 读书
-      //ConsumeGold::class.java,   // 消费金
-      //OmegakoiTown::class.java,  // 小镇
+      //ConsumeGold::class.java,     // 消费金
+      //OmegakoiTown::class.java,    // 小镇
     )
 
     val allConfig: List<Class<out Model>> = array.toList()
