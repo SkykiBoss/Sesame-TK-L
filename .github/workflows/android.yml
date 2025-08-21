@@ -1,5 +1,5 @@
 name: 🍚构建027魔改版本
-run-name: 🍚 好好吃饭 @ 构建027魔改版本
+run-name: 🍚好好吃饭 @ 构建027魔改版本
 
 on:
   workflow_dispatch:
